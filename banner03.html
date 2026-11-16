@@ -680,33 +680,64 @@
           elapsedBeforePause += performance.now() - startTime;
         });
 
-        storyCard.addEventListener("pointerup", (e) => {
-          isPaused = false;
-          startTime = performance.now();
+                storyCard.addEventListener("pointerup", (e) => {
           const diffX = e.clientX - touchStartX;
           if (Math.abs(diffX) > 35) {
-            renderSlide(diffX < 0 ? (currentIndex + 1) % mockPromotions.length : (currentIndex - 1 + mockPromotions.length) % mockPromotions.length);
-          } else if (Math.abs(diffX) < 8) {
-            const rect = storyCard.getBoundingClientRect();
-            if (e.clientX - rect.left < rect.width * 0.3) {
-              renderSlide((currentIndex - 1 + mockPromotions.length) % mockPromotions.length);
+            // Свайп влево/вправо листает слайды
+            const nextIdx = diffX < 0
+              ? (currentIndex + 1) % mockPromotions.length
+              : (currentIndex - 1 + mockPromotions.length) % mockPromotions.length;
+            renderSlide(nextIdx);
+            if (offerSelect.value !== "") {
+              isPaused = true;
+              barFills[nextIdx].style.width = "100%";
+              offerSelect.value = mockPromotions[nextIdx].id;
+              offerSelect.dispatchEvent(new Event("change"));
             } else {
-              const cur = mockPromotions[currentIndex];
-              if (cur.serviceName) {
-                offerSelect.value = cur.id;
-                offerSelect.dispatchEvent(new Event("change"));
-              }
-              renderSlide((currentIndex + 1) % mockPromotions.length);
+              isPaused = false;
+              startTime = performance.now();
             }
+          } else if (Math.abs(diffX) < 8) {
+            // Клик по слайду: застываем ИМЕННО на текущем слайде и выбираем его в списке
+            const cur = mockPromotions[currentIndex];
+            isPaused = true;
+            barFills[currentIndex].style.width = "100%";
+            if (cur && cur.id) {
+              offerSelect.value = cur.id;
+              offerSelect.dispatchEvent(new Event("change"));
+            }
+          } else {
+            isPaused = false;
+            startTime = performance.now();
           }
         });
 
         offerSelect.addEventListener("change", () => {
+          if (offerSelect.value === "") {
+            // Выбран заголовок ("Təklifi seçin") -> запускаем карусель дальше с текущего места
+            isPaused = false;
+            elapsedBeforePause = 0;
+            startTime = performance.now();
+            dateInput.value = "";
+            validateForm();
+            return;
+          }
+
+          // Выбрана конкретная услуга -> переключаем на её слайд и замораживаем карусель
           isPaused = true;
+          const selectedIdx = mockPromotions.findIndex(p => p.id === offerSelect.value);
+          if (selectedIdx !== -1 && selectedIdx !== currentIndex) {
+            renderSlide(selectedIdx);
+          }
+          if (selectedIdx !== -1) {
+            barFills[selectedIdx].style.width = "100%";
+          }
+
           const opt = offerSelect.options[offerSelect.selectedIndex];
-          if (opt?.dataset?.fixedDate) dateInput.value = opt.dataset.fixedDate;
+          dateInput.value = opt?.dataset?.fixedDate || "";
           validateForm();
         });
+
 
         dateInput.addEventListener("change", () => { isPaused = true; validateForm(); });
         timeSelect.addEventListener("change", () => { isPaused = true; validateForm(); });
@@ -736,9 +767,20 @@
           root.classList.add("is-expanded");
           Swal.getPopup()?.classList.add("pm-show-close");
         }, 1500);
+        // ШАГ 2: Синхронизация выпадающего списка услуг со слайдом в карусели
+        offerSelect.addEventListener("change", () => {
+          const selectedIndex = promos.findIndex(p => String(p.id) === String(offerSelect.value));
+          if (selectedIndex !== -1 && selectedIndex !== currentIndex) {
+            isPaused = true;
+            renderSlide(selectedIndex);
+          }
+        });
+      }, // <-- закрывает didOpen
+      willClose: () => {
+        clearInterval(timer);
       }
-    });
-  }
+    }); // <-- закрывает Swal.fire({ ... })
+  } // <-- закрывает function runLocalBannerTest()
 
   window.addEventListener("DOMContentLoaded", runLocalBannerTest);
 </script>
