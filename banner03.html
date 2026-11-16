@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Тест баннера в VS Code</title>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <style>
+    body {
+      font-family: sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f3f4f6;
+    }
+    .test-trigger-btn {
+      padding: 14px 28px;
+      font-size: 16px;
+      font-weight: 600;
+      color: #fff;
+      background-color: #16a34a;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+
+    <template id="promo-banner-template">
+  <style>
+    .pm-root {
+      font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+      color: #111827;
+      box-sizing: border-box;
+      user-select: none;
+    }
+
+    .swal2-popup {
+      padding: 14px 0 18px !important;
+      border-radius: 18px !important;
+    }
+
+    .swal2-html-container {
+      margin: 0 !important;
+      padding: 0 14px !important;
+      overflow: visible !important;
+    }
+
+    .swal2-close {
+      margin-right: 12px !important;
+      display: none !important;
+      box-shadow: none !important;
+      outline: none !important;
+      border: none !important;
+      background: transparent !important;
+      top: 12px !important;
+      right: 12px !important;
+      width: 32px !important;
+      height: 32px !important;
+      font-size: 26px !important;
+      color: #9ca3af !important;
+    }
+
+    .swal2-popup.pm-show-close .swal2-close {
+      display: flex !important;
+    }
+
+
+        /* ================= ЭКРАН 1 И ШАПКА ================= */
+    .pm-hero-status {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 28px 12px 24px;
+      transition: all 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .pm-circle {
+      width: 84px;
+      height: 84px;
+      border-radius: 50%;
+      border: 4px solid #059639;
+      background-color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      animation: pmPop 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      transition: all 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .pm-check {
+      width: 42px;
+      height: 42px;
+      stroke: #059639;
+      stroke-width: 3.5;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 50;
+      stroke-dashoffset: 50;
+      animation: pmDraw 0.5s 0.15s ease forwards;
+      transition: all 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .pm-hero-title {
+      margin: 0 0 6px;
+      font-size: 22px;
+      font-weight: 800;
+      color: #059639;
+      text-align: center;
+    }
+
+    .pm-hero-sub {
+      margin: 0;
+      font-size: 15px;
+      color: #374151;
+      text-align: center;
+    }
+
+
+
+        /* ЭКРАН 2: Капсула укорочена справа на 38px под крестик */
+    .pm-root.is-expanded .pm-hero-status {
+      flex-direction: row;
+      justify-content: flex-start;
+      width: calc(100% - 38px);
+      background-color: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      border-radius: 9999px;
+      padding: 7px 14px;
+      margin: 0 0 12px 0;
+      gap: 10px;
+      box-sizing: border-box;
+    }
+
+    .pm-root.is-expanded .pm-circle {
+      width: 22px;
+      height: 22px;
+      border-width: 2px;
+      margin-bottom: 0;
+      flex-shrink: 0;
+    }
+
+    .pm-root.is-expanded .pm-check {
+      width: 13px;
+      height: 13px;
+      stroke-width: 3;
+    }
+
+    .pm-root.is-expanded .pm-hero-title {
+      display: none;
+    }
+
+    .pm-root.is-expanded .pm-hero-sub {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: #065f46;
+      text-align: left;
+    }
+
+    /* ================= КОНТЕЙНЕР БАННЕРА ================= */
+    .pm-body {
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+      transform: translateY(12px);
+      transition: max-height 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+                  opacity 0.45s ease 0.1s,
+                  transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .pm-root.is-expanded .pm-body {
+      max-height: 1300px;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .pm-badge-wrap {
+      height: 24px;
+      text-align: left;
+      padding-left: 12px;
+      margin-bottom: -12px;
+      position: relative;
+      z-index: 3;
+    }
+
+    .pm-badge {
+      display: inline-block;
+      background-color: #ffe4e6;
+      color: #be123c;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 3px 11px;
+      border-radius: 9999px;
+    }
+
+    .pm-badge.is-hidden {
+      visibility: hidden;
+      opacity: 0;
+    }
+
+
+
+        /* КАРТОЧКА СЛАЙДЕРА (убрано contain: strict для работы в Opera) */
+    .pm-story-card {
+      position: relative;
+      width: 100%;
+      height: 195px;
+      border-radius: 14px;
+      overflow: hidden;
+      background-color: #f3f4f6;
+      box-sizing: border-box;
+      cursor: pointer;
+      touch-action: pan-y;
+    }
+
+    .pm-story-media {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .pm-progress-bars {
+      display: flex;
+      gap: 6px;
+      margin: 8px 0 10px;
+    }
+
+    .pm-bar-track {
+      flex: 1;
+      height: 3.5px;
+      background-color: #e5e7eb;
+      border-radius: 9999px;
+      overflow: hidden;
+    }
+
+    .pm-bar-fill {
+      width: 0%;
+      height: 100%;
+      background-color: #059639;
+    }
+
+
+
+        .pm-slide-info {
+      text-align: left;
+      margin-bottom: 8px;
+    }
+
+    .pm-slide-title {
+      margin: 0 0 4px;
+      font-size: 17px;
+      font-weight: 700;
+      color: #111827;
+      line-height: 24px;
+      height: 24px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pm-slide-desc {
+      margin: 0;
+      font-size: 13.5px;
+      color: #4b5563;
+      line-height: 20px;
+      height: 40px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .pm-static-slogan {
+      margin: 10px 0;
+      padding: 9px 0;
+      border-top: 1px solid #f3f4f6;
+      border-bottom: 1px solid #f3f4f6;
+      text-align: center;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: #059639;
+    }
+
+    /* ================= ФОРМА И ЗАГОЛОВОК ДАТЫ/ВРЕМЕНИ ================= */
+    .pm-form {
+      text-align: left;
+    }
+
+    .pm-datetime-header {
+      margin: 12px 0 10px;
+    }
+
+    .pm-datetime-title {
+      margin: 0 0 2px;
+      font-size: 16px;
+      font-weight: 700;
+      color: #111827;
+    }
+
+    .pm-datetime-sub {
+      margin: 0;
+      font-size: 12.5px;
+      color: #6b7280;
+    }
+
+    .pm-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 5px;
+    }
+
+    .pm-field-box {
+      position: relative;
+      margin-bottom: 11px;
+    }
+
+
+
+        .pm-icon-left {
+      position: absolute;
+      left: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #6b7280;
+      font-size: 15px;
+      line-height: 1;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .pm-input {
+      width: 100%;
+      height: 46px;
+      padding: 0 36px 0 38px;
+      border: 1.5px solid #d1d5db;
+      border-radius: 11px;
+      font-size: 14.5px;
+      color: #111827;
+      background-color: #ffffff;
+      box-sizing: border-box;
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    .pm-input:focus {
+      border-color: #059639;
+      box-shadow: 0 0 0 3px rgba(5, 150, 57, 0.12);
+    }
+
+    .pm-chevron {
+      position: absolute;
+      right: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #6b7280;
+      pointer-events: none;
+      display: flex;
+    }
+
+    .pm-submit-btn {
+      width: 100%;
+      height: 48px;
+      margin-top: 6px;
+      background-color: #e5e7eb;
+      color: #9ca3af;
+      border: none;
+      border-radius: 9999px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: not-allowed;
+      transition: all 0.2s ease;
+    }
+
+    .pm-submit-btn.is-active {
+      background-color: #059639;
+      color: #ffffff;
+      cursor: pointer;
+    }
+
+    @keyframes pmPop {
+      0% { transform: scale(0.4); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes pmDraw {
+      to { stroke-dashoffset: 0; }
+    }
+  </style>
+
+
+
+  <div id="pm-root" class="pm-root">
+    <!-- Шапка -->
+    <div class="pm-hero-status">
+      <div class="pm-circle">
+        <svg class="pm-check" viewBox="0 0 24 24">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      </div>
+      <h2 id="pm-hero-title" class="pm-hero-title"></h2>
+      <p id="pm-hero-sub" class="pm-hero-sub"></p>
+    </div>
+
+    <!-- Тело баннера -->
+    <div id="pm-body" class="pm-body">
+      <div class="pm-badge-wrap">
+        <span id="pm-badge" class="pm-badge is-hidden"></span>
+      </div>
+
+      <div id="pm-story-card" class="pm-story-card"></div>
+      <div id="pm-progress-bars" class="pm-progress-bars"></div>
+
+      <div class="pm-slide-info">
+        <h3 id="pm-slide-title" class="pm-slide-title"></h3>
+        <p id="pm-slide-desc" class="pm-slide-desc"></p>
+      </div>
+
+      <div id="pm-static-slogan" class="pm-static-slogan"></div>
+
+      <div id="pm-form-wrap" class="pm-form">
+        <!-- Поле 1: Специальное предложение -->
+        <label id="pm-lbl-offer" class="pm-label" for="pm-select-offer"></label>
+        <div class="pm-field-box">
+          <span class="pm-icon-left">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3.5" y="3.5" width="7" height="7" rx="1.5"></rect>
+              <rect x="13.5" y="3.5" width="7" height="7" rx="1.5"></rect>
+              <rect x="13.5" y="13.5" width="7" height="7" rx="1.5"></rect>
+              <rect x="3.5" y="13.5" width="7" height="7" rx="1.5"></rect>
+            </svg>
+          </span>
+          <select id="pm-select-offer" class="pm-input"></select>
+          <span class="pm-chevron">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </span>
+        </div>
+
+        <!-- Заголовок даты и времени -->
+        <div class="pm-datetime-header">
+          <h4 id="pm-dt-title" class="pm-datetime-title"></h4>
+          <p id="pm-dt-sub" class="pm-datetime-sub"></p>
+        </div>
+
+        <!-- Поле 2: Дата -->
+        <label id="pm-lbl-date" class="pm-label" for="pm-input-date"></label>
+        <div class="pm-field-box">
+          <span class="pm-icon-left">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4.5" width="18" height="16.5" rx="2.5"></rect>
+              <line x1="16" y1="2.5" x2="16" y2="6.5"></line>
+              <line x1="8" y1="2.5" x2="8" y2="6.5"></line>
+              <line x1="3" y1="9.5" x2="21" y2="9.5"></line>
+            </svg>
+          </span>
+          <input type="text" id="pm-input-date" class="pm-input" placeholder="gg.aa.iiii" readonly>
+          <span class="pm-chevron">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </span>
+        </div>
+
+        <!-- Поле 3: Свободное время -->
+        <label id="pm-lbl-time" class="pm-label" for="pm-select-time"></label>
+        <div class="pm-field-box">
+          <span class="pm-icon-left">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9.5"></circle>
+              <polyline points="12 6.5 12 12 15.5 14"></polyline>
+            </svg>
+          </span>
+          <select id="pm-select-time" class="pm-input">
+            <option id="pm-opt-time-def" value=""></option>
+            <option value="10:00">10:00</option>
+            <option value="11:30">11:30</option>
+            <option value="14:00">14:00</option>
+            <option value="16:30">16:30</option>
+          </select>
+          <span class="pm-chevron">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </span>
+        </div>
+
+        <button type="button" id="pm-submit-btn" class="pm-submit-btn" disabled></button>
+      </div>
+    </div>
+  </div>
+</template>
+
+
+
+<script>
+  const mockPromotions = [
+    {
+      id: "promo_2",
+      type: "Событие",
+      badge: "",
+      title: "29 Noyabr Cərrah-ortoped qəbulu",
+      description: "Dəvət olunmuş mütəxəssisin öncədən qeydiyyatla müayinəsi.",
+      serviceName: "Cərrah-ortoped qəbulu",
+      fixedDate: "29-11-2026",
+      durationSec: 5,
+      mediaUrl: "https://raw.githubusercontent.com/ger0n/img_or_models/refs/heads/main/f1.jpg",
+      mediaType: "image"
+    },
+    {
+      id: "promo_3",
+      type: "Событие",
+      badge: "",
+      title: "20 Dekabr Aparıcı cərrahın qəbulu",
+      description: "Klinikamızda cərrah konsultasiyasına yazılın.",
+      serviceName: "Cərrah qəbulu",
+      fixedDate: "20-12-2026",
+      durationSec: 5,
+      mediaUrl: "https://raw.githubusercontent.com/ger0n/img_or_models/refs/heads/main/f2.jpeg",
+      mediaType: "image"
+    },
+    {
+      id: "promo_4",
+      type: "Акция",
+      badge: "−30%",
+      title: "30% endirimlə peşəkar diş təmizliyi",
+      description: "Xüsusi qiymətlə kompleks ağız boşluğu gigiyenası.",
+      serviceName: "Peşəkar təmizlik (Aksiya −30%)",
+      fixedDate: "",
+      durationSec: 5,
+      mediaUrl: "https://ger0n.github.io/img_or_models/blood02.mp4",
+      posterUrl: "https://raw.githubusercontent.com/ger0n/img_or_models/refs/heads/main/poster_blood02.png",
+      mediaType: "video"
+    }
+  ];
+
+
+
+    function runLocalBannerTest() {
+    const tpl = document.getElementById("promo-banner-template");
+    if (!tpl) return;
+
+    Swal.fire({
+      width: "460px",
+      padding: "20px",
+      background: "#ffffff",
+      html: tpl.innerHTML,
+      showConfirmButton: false,
+      showCloseButton: true,
+      didOpen: () => {
+        const root = document.getElementById("pm-root");
+        const badgeEl = document.getElementById("pm-badge");
+        const storyCard = document.getElementById("pm-story-card");
+        const barsWrap = document.getElementById("pm-progress-bars");
+        const slideTitle = document.getElementById("pm-slide-title");
+        const slideDesc = document.getElementById("pm-slide-desc");
+        const offerSelect = document.getElementById("pm-select-offer");
+        const dateInput = document.getElementById("pm-input-date");
+        const timeSelect = document.getElementById("pm-select-time");
+        const submitBtn = document.getElementById("pm-submit-btn");
+
+        document.getElementById("pm-hero-title").textContent = "Uğurlu!";
+        document.getElementById("pm-hero-sub").textContent = "Qeydiyyat uğurla yaradıldı!";
+        document.getElementById("pm-static-slogan").textContent = "Xüsusi təklifimizdən yararlanın";
+        document.getElementById("pm-lbl-offer").textContent = "Xüsusi təklif";
+        document.getElementById("pm-lbl-date").textContent = "Tarix";
+        document.getElementById("pm-lbl-time").textContent = "Vaxt";
+        document.getElementById("pm-opt-time-def").textContent = "vaxt seçin";
+        submitBtn.textContent = "Əlavə qeydiyyatı təsdiqləyin";
+
+        const defOpt = document.createElement("option");
+        defOpt.value = "";
+        defOpt.textContent = "Təklifi seçin";
+        offerSelect.appendChild(defOpt);
+
+        mockPromotions.forEach((it) => {
+          const opt = document.createElement("option");
+          opt.value = it.id;
+          opt.textContent = it.serviceName;
+          opt.dataset.fixedDate = it.fixedDate || "";
+          offerSelect.appendChild(opt);
+        });
+
+        const barFills = [];
+        mockPromotions.forEach(() => {
+          const track = document.createElement("div");
+          track.className = "pm-bar-track";
+          const fill = document.createElement("div");
+          fill.className = "pm-bar-fill";
+          track.appendChild(fill);
+          barsWrap.appendChild(track);
+          barFills.push(fill);
+        });
+
+        let currentIndex = 0;
+        let rafId = null;
+        let startTime = 0;
+        let elapsedBeforePause = 0;
+        let isPaused = false;
+
+        function renderSlide(idx) {
+          currentIndex = idx;
+          const item = mockPromotions[idx];
+
+          if (item.badge) {
+            badgeEl.textContent = item.badge;
+            badgeEl.classList.remove("is-hidden");
+          } else {
+            badgeEl.classList.add("is-hidden");
+          }
+
+          if (item.mediaType === "video") {
+            const posterAttr = item.posterUrl ? `poster="${item.posterUrl}"` : "";
+            storyCard.innerHTML = `<video src="${item.mediaUrl}" ${posterAttr} class="pm-story-media" autoplay loop muted playsinline></video>`;
+
+            const videoEl = storyCard.querySelector("video");
+            if (videoEl) {
+              videoEl.muted = true;
+              videoEl.defaultMuted = true;
+              videoEl.playsInline = true;
+              videoEl.play().catch(() => {});
+            }
+          } else {
+            storyCard.innerHTML = `<img src="${item.mediaUrl}" class="pm-story-media">`;
+          }
+
+          slideTitle.textContent = item.title;
+          slideDesc.textContent = item.description;
+
+          barFills.forEach((fill, i) => {
+            fill.style.width = i < idx ? "100%" : "0%";
+          });
+
+          elapsedBeforePause = 0;
+          startTime = performance.now();
+          cancelAnimationFrame(rafId);
+          runProgress(item.durationSec * 1000);
+        }
+
+
+
+                function runProgress(durationMs) {
+          function tick(now) {
+            if (!isPaused) {
+              const elapsed = elapsedBeforePause + (now - startTime);
+              const pct = Math.min(100, (elapsed / durationMs) * 100);
+              barFills[currentIndex].style.width = pct + "%";
+              if (pct >= 100) {
+                renderSlide((currentIndex + 1) % mockPromotions.length);
+                return;
+              }
+            }
+            rafId = requestAnimationFrame(tick);
+          }
+          rafId = requestAnimationFrame(tick);
+        }
+
+        let touchStartX = 0;
+        storyCard.addEventListener("pointerdown", (e) => {
+          touchStartX = e.clientX;
+          isPaused = true;
+          elapsedBeforePause += performance.now() - startTime;
+        });
+
+        storyCard.addEventListener("pointerup", (e) => {
+          isPaused = false;
+          startTime = performance.now();
+          const diffX = e.clientX - touchStartX;
+          if (Math.abs(diffX) > 35) {
+            renderSlide(diffX < 0 ? (currentIndex + 1) % mockPromotions.length : (currentIndex - 1 + mockPromotions.length) % mockPromotions.length);
+          } else if (Math.abs(diffX) < 8) {
+            const rect = storyCard.getBoundingClientRect();
+            if (e.clientX - rect.left < rect.width * 0.3) {
+              renderSlide((currentIndex - 1 + mockPromotions.length) % mockPromotions.length);
+            } else {
+              const cur = mockPromotions[currentIndex];
+              if (cur.serviceName) {
+                offerSelect.value = cur.id;
+                offerSelect.dispatchEvent(new Event("change"));
+              }
+              renderSlide((currentIndex + 1) % mockPromotions.length);
+            }
+          }
+        });
+
+        offerSelect.addEventListener("change", () => {
+          isPaused = true;
+          const opt = offerSelect.options[offerSelect.selectedIndex];
+          if (opt?.dataset?.fixedDate) dateInput.value = opt.dataset.fixedDate;
+          validateForm();
+        });
+
+        dateInput.addEventListener("change", () => { isPaused = true; validateForm(); });
+        timeSelect.addEventListener("change", () => { isPaused = true; validateForm(); });
+
+        function validateForm() {
+          const ready = Boolean(offerSelect.value && dateInput.value && timeSelect.value);
+          submitBtn.disabled = !ready;
+          submitBtn.classList.toggle("is-active", ready);
+        }
+
+        submitBtn.addEventListener("click", () => {
+          cancelAnimationFrame(rafId);
+          Swal.fire({
+            icon: "success",
+            title: "Uğurla",
+            text: "Əlavə qeydiyyat yaradıldı!",
+            confirmButtonColor: "#059639",
+            confirmButtonText: "OK"
+          });
+        });
+
+        // Заранее готовим первый слайд в скрытом блоке, пока идёт анимация галочки
+        renderSlide(0);
+
+        // Через 1.5 сек плавно раскрываем форму
+        setTimeout(() => {
+          root.classList.add("is-expanded");
+          Swal.getPopup()?.classList.add("pm-show-close");
+        }, 1500);
+      }
+    });
+  }
+
+  window.addEventListener("DOMContentLoaded", runLocalBannerTest);
+</script>
+</body>
+</html>
