@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Тест баннера в VS Code</title>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.js"></script>
 
   <style>
     body {
@@ -343,6 +345,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
+
     }
 
     .pm-input {
@@ -358,12 +361,33 @@
       outline: none;
       appearance: none;
       -webkit-appearance: none;
+      
     }
 
     .pm-input:focus {
       border-color: #059639;
       box-shadow: 0 0 0 3px rgba(5, 150, 57, 0.12);
     }
+
+        /* Неактивное (серое) состояние для полей, пока ничего не выбрано */
+    .pm-input.is-placeholder {
+      color: #9ca3af !important;
+    }
+
+        /* Подсветка активных дней акции в календаре цветом бейджа */
+    .flatpickr-day.pm-promo-active-day {
+      background: #ecfdf5 !important;
+      border-color: #10b981 !important;
+      color: #065f46 !important;
+      font-weight: 700 !important;
+    }
+    .flatpickr-day.pm-promo-active-day.selected {
+      background: #059669 !important;
+      border-color: #059669 !important;
+      color: #ffffff !important;
+    }
+
+
 
     .pm-chevron {
       position: absolute;
@@ -472,7 +496,9 @@
               <line x1="3" y1="9.5" x2="21" y2="9.5"></line>
             </svg>
           </span>
-          <input type="text" id="pm-input-date" class="pm-input" placeholder="gg.aa.iiii" readonly>
+         <input type="text" id="pm-input-date" class="pm-input" placeholder="Tarix" readonly>
+
+
           <span class="pm-chevron">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
               <polyline points="6 9 12 15 18 9"></polyline>
@@ -513,6 +539,8 @@
 
 <script>
   const mockPromotions = [
+    
+    
     {
       id: "promo_2",
       type: "Событие",
@@ -532,18 +560,22 @@
       title: "20 Dekabr Aparıcı cərrahın qəbulu",
       description: "Klinikamızda cərrah konsultasiyasına yazılın.",
       serviceName: "Cərrah qəbulu",
-      fixedDate: "20-12-2026",
+      fixedDate: "2026-12-20",
       durationSec: 5,
       mediaUrl: "https://raw.githubusercontent.com/ger0n/img_or_models/refs/heads/main/f2.jpeg",
       mediaType: "image"
     },
+    
     {
+        
       id: "promo_4",
       type: "Акция",
       badge: "−30%",
       title: "30% endirimlə peşəkar diş təmizliyi",
       description: "Xüsusi qiymətlə kompleks ağız boşluğu gigiyenası.",
       serviceName: "Peşəkar təmizlik (Aksiya −30%)",
+      startDate: "2026-10-30", 
+      endDate: "2026-11-30",
       fixedDate: "",
       durationSec: 5,
       mediaUrl: "https://ger0n.github.io/img_or_models/blood02.mp4",
@@ -592,12 +624,13 @@
         offerSelect.appendChild(defOpt);
 
         mockPromotions.forEach((it) => {
-          const opt = document.createElement("option");
-          opt.value = it.id;
-          opt.textContent = it.serviceName;
-          opt.dataset.fixedDate = it.fixedDate || "";
-          offerSelect.appendChild(opt);
-        });
+        const opt = document.createElement("option");
+        opt.value = it.id;
+        opt.textContent = it.serviceName;
+        opt.dataset.startDate = it.startDate || it.fixedDate || "";
+        opt.dataset.endDate = it.endDate || it.fixedDate || "";
+        offerSelect.appendChild(opt);
+      });
 
         const barFills = [];
         mockPromotions.forEach(() => {
@@ -712,18 +745,103 @@
           }
         });
 
+            
+          // Умная логика дат, автоподстановки времени и серого/активного цвета (Шаг 3)
+      let fpInstance = null;
+
+      function formatLocalYMD(dateObj) {
+        const y = dateObj.getFullYear();
+        const m = String(dateObj.getMonth() + 1).padStart(2, "0");
+        const d = String(dateObj.getDate()).padStart(2, "0");
+        return `${y}-${m}-${d}`;
+      }
+
+           function updateDateAndSlots(opt) {
+        if (fpInstance) {
+          fpInstance.destroy();
+          fpInstance = null;
+        }
+
+        if (!opt) {
+          dateInput.readOnly = true;
+          dateInput.style.backgroundColor = "#ffffff";
+          dateInput.value = "";
+          timeSelect.value = "";
+          validateForm();
+          return;
+        }
+
+        const startStr = opt.dataset.startDate;
+        const endStr = opt.dataset.endDate;
+        const todayStr = formatLocalYMD(new Date());
+
+        // Приводим DD-MM-YYYY (если вдруг осталось как в promo_2 "29-11-2026") к YYYY-MM-DD для flatpickr
+        const normalizeYMD = (s) => {
+          if (!s) return "";
+          const m = s.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+          return m ? `${m}-${m}-${m}` : s;
+        };
+
+        const normStart = normalizeYMD(startStr);
+        const normEnd = normalizeYMD(endStr);
+        const isSingleDay = normStart && normEnd && normStart === normEnd;
+
+        // Стартовая дата: для 1 дня — сама дата события; для периода — не раньше сегодняшнего дня и не раньше начала акции
+        const minDateStr = isSingleDay
+          ? normStart
+          : (normStart && normStart > todayStr ? normStart : todayStr);
+        const maxDateStr = normEnd || null;
+        const defaultDateStr = (maxDateStr && minDateStr > maxDateStr) ? maxDateStr : minDateStr;
+
+        dateInput.readOnly = false;
+        // Для 1 дня делаем лёгкий серый фон поля как подсказку, что дата фиксирована, но календарь по клику откроется
+        dateInput.style.backgroundColor = isSingleDay ? "#f3f4f6" : "#ffffff";
+        dateInput.value = defaultDateStr;
+
+                fpInstance = flatpickr(dateInput, {
+          dateFormat: "Y-m-d",       // это значение уйдёт на сервер при отправке (2026-12-20)
+          altInput: true,            // включаем красивое поле для глаз клиента
+          altFormat: "d-m-Y",        // клиент видит привычный формат (20-12-2026)
+          altInputClass: "pm-input", // сохраняем ваши точные стили поля
+          defaultDate: defaultDateStr,
+          minDate: minDateStr,
+          maxDate: maxDateStr,
+          disableMobile: true,
+          onDayCreate: (dObj, dStr, fp, dayElem) => {
+            const d = formatLocalYMD(dayElem.dateObj);
+            if (d >= minDateStr && (!maxDateStr || d <= maxDateStr)) {
+              dayElem.classList.add("pm-promo-active-day");
+            }
+          },
+          onChange: () => {
+            isPaused = true;
+            if (timeSelect.options.length > 1 && !timeSelect.value) {
+              timeSelect.selectedIndex = 1;
+            }
+            validateForm();
+          }
+        });
+
+
+        // Автовыбор первого доступного слота времени
+        if (timeSelect.options.length > 1) {
+          timeSelect.selectedIndex = 1;
+        }
+        validateForm();
+      }
+
+
+
+
         offerSelect.addEventListener("change", () => {
           if (offerSelect.value === "") {
-            // Выбран заголовок ("Təklifi seçin") -> запускаем карусель дальше с текущего места
             isPaused = false;
             elapsedBeforePause = 0;
             startTime = performance.now();
-            dateInput.value = "";
-            validateForm();
+            updateDateAndSlots(null);
             return;
           }
 
-          // Выбрана конкретная услуга -> переключаем на её слайд и замораживаем карусель
           isPaused = true;
           const selectedIdx = mockPromotions.findIndex(p => p.id === offerSelect.value);
           if (selectedIdx !== -1 && selectedIdx !== currentIndex) {
@@ -734,19 +852,34 @@
           }
 
           const opt = offerSelect.options[offerSelect.selectedIndex];
-          dateInput.value = opt?.dataset?.fixedDate || "";
+          updateDateAndSlots(opt);
+        });
+
+        // При ручном выборе даты из календаря — автовыбор первого слота времени и проверка формы
+        dateInput.addEventListener("change", () => {
+          isPaused = true;
+          if (dateInput.value && timeSelect.options.length > 1 && !timeSelect.value) {
+            timeSelect.selectedIndex = 1;
+          }
           validateForm();
         });
 
-
-        dateInput.addEventListener("change", () => { isPaused = true; validateForm(); });
-        timeSelect.addEventListener("change", () => { isPaused = true; validateForm(); });
+        timeSelect.addEventListener("change", () => {
+          isPaused = true;
+          validateForm();
+        });
 
         function validateForm() {
-          const ready = Boolean(offerSelect.value && dateInput.value && timeSelect.value);
-          submitBtn.disabled = !ready;
-          submitBtn.classList.toggle("is-active", ready);
+          // Серый цвет для пустых полей (плейсхолдеров), тёмный — для выбранных
+          offerSelect.classList.toggle("is-placeholder", offerSelect.value === "");
+          dateInput.classList.toggle("is-placeholder", dateInput.value === "");
+          timeSelect.classList.toggle("is-placeholder", timeSelect.value === "");
+
+                  const ok = offerSelect.value !== "" && dateInput.value !== "" && timeSelect.value !== "";
+          submitBtn.disabled = !ok;
+          submitBtn.classList.toggle("is-active", ok);
         }
+
 
         submitBtn.addEventListener("click", () => {
           cancelAnimationFrame(rafId);
@@ -759,26 +892,22 @@
           });
         });
 
-        // Заранее готовим первый слайд в скрытом блоке, пока идёт анимация галочки
+        // Заранее готовим первый слайд и красим пустые поля в серый при открытии
         renderSlide(0);
+        validateForm();
 
         // Через 1.5 сек плавно раскрываем форму
         setTimeout(() => {
           root.classList.add("is-expanded");
           Swal.getPopup()?.classList.add("pm-show-close");
         }, 1500);
-        // ШАГ 2: Синхронизация выпадающего списка услуг со слайдом в карусели
-        offerSelect.addEventListener("change", () => {
-          const selectedIndex = promos.findIndex(p => String(p.id) === String(offerSelect.value));
-          if (selectedIndex !== -1 && selectedIndex !== currentIndex) {
-            isPaused = true;
-            renderSlide(selectedIndex);
-          }
-        });
       }, // <-- закрывает didOpen
-      willClose: () => {
-        clearInterval(timer);
+
+            willClose: () => {
+        if (fpInstance) fpInstance.destroy();
+        cancelAnimationFrame(rafId);
       }
+
     }); // <-- закрывает Swal.fire({ ... })
   } // <-- закрывает function runLocalBannerTest()
 
