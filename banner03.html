@@ -223,7 +223,7 @@
       touch-action: pan-y;
     }
 
-    .pm-story-media {
+      .pm-story-media {
       position: absolute;
       top: 0;
       left: 0;
@@ -231,7 +231,77 @@
       height: 100%;
       object-fit: cover;
       display: block;
+      border-radius: 14px;
+      opacity: 0;
+      transition: opacity 0.45s ease;
     }
+
+    .pm-story-media.is-loaded {
+      opacity: 1;
+    }
+    
+        /* Водяной знак бренда или партнёрской ссылки в левом нижнем углу слайда */
+       /* Водяной знак (текст или логотип) в левом нижнем углу слайда */
+    .pm-watermark {
+      position: absolute;
+      left: 10px;
+      bottom: 10px;
+      z-index: 5;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(15, 23, 42, 0.45); /* полупрозрачный фон для текста */
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      color: rgba(255, 255, 255, 0.88);   /* лёгкая прозрачность самого текста */
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 9px;
+      border-radius: 12px;
+      text-decoration: none;
+      letter-spacing: 0.2px;
+      max-width: 75%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: opacity 0.2s ease, background 0.2s ease;
+      opacity: 0.78;
+    }
+
+    /* Если выводится логотип вместо текста — убираем тёмную подложку и задаём управляемые размеры */
+    .pm-watermark.has-logo {
+      background: transparent;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      padding: 0;
+      border-radius: 0;
+      opacity: 0.78; /* общая прозрачность логотипа */
+    }
+
+    .pm-watermark-logo {
+      display: block;
+      max-width: var(--wm-logo-w, 90px);   /* ширина по умолчанию 90px, можно менять */
+      max-height: var(--wm-logo-h, 28px);  /* высота по умолчанию 28px, можно менять */
+      width: auto;
+      height: auto;
+      object-fit: contain;
+    }
+
+    span.pm-watermark {
+      cursor: default;
+    }
+
+    a.pm-watermark:hover {
+      opacity: 1;
+      background: rgba(16, 185, 129, 0.85);
+    }
+
+    a.pm-watermark.has-logo:hover {
+      background: transparent;
+      opacity: 1;
+    }
+
+
 
     .pm-progress-bars {
       display: flex;
@@ -449,7 +519,9 @@
         <span id="pm-badge" class="pm-badge is-hidden"></span>
       </div>
 
-      <div id="pm-story-card" class="pm-story-card"></div>
+      <div id="pm-story-card" class="pm-story-card">
+          <div id="pm-watermark-slot"></div>
+        </div>
       <div id="pm-progress-bars" class="pm-progress-bars"></div>
 
       <div class="pm-slide-info">
@@ -652,6 +724,9 @@
         function renderSlide(idx) {
           currentIndex = idx;
           const item = mockPromotions[idx];
+          const defaultClinicName = "AlfaMed Plus"; // по умолчанию название клиники (позже подтянем из настроек)
+          const watermarkSlot = document.getElementById("pm-watermark-slot");
+
 
           if (item.badge) {
             badgeEl.textContent = item.badge;
@@ -660,33 +735,85 @@
             badgeEl.classList.add("is-hidden");
           }
 
-          if (item.mediaType === "video") {
-            const posterAttr = item.posterUrl ? `poster="${item.posterUrl}"` : "";
-            storyCard.innerHTML = `<video src="${item.mediaUrl}" ${posterAttr} class="pm-story-media" autoplay loop muted playsinline></video>`;
+                    // Сохраняем старые медиа-элементы на 300мс, чтобы не было чёрной/серой вспышки при переходе
+          const oldMedias = storyCard.querySelectorAll(".pm-story-media");
 
-            const videoEl = storyCard.querySelector("video");
-            if (videoEl) {
-              videoEl.muted = true;
-              videoEl.defaultMuted = true;
-              videoEl.playsInline = true;
-              videoEl.play().catch(() => {});
+          if (item.mediaType === "video") {
+            // 1. Если есть постер — показываем его сразу как подложку, пока грузится видео
+            if (item.posterUrl) {
+              const posterImg = document.createElement("img");
+              posterImg.src = item.posterUrl;
+              posterImg.className = "pm-story-media is-loaded";
+              storyCard.appendChild(posterImg);
             }
+
+            // 2. Поверх постера плавно проявляем само видео, когда первый кадр готов (loadeddata)
+            const videoEl = document.createElement("video");
+            videoEl.src = item.mediaUrl;
+            if (item.posterUrl) videoEl.poster = item.posterUrl;
+            videoEl.className = "pm-story-media";
+            videoEl.autoplay = true;
+            videoEl.loop = true;
+            videoEl.muted = true;
+            videoEl.defaultMuted = true;
+            videoEl.playsInline = true;
+
+            videoEl.addEventListener("loadeddata", () => {
+              videoEl.classList.add("is-loaded");
+            }, { once: true });
+
+            storyCard.appendChild(videoEl);
+            videoEl.play().catch(() => {});
           } else {
-            storyCard.innerHTML = `<img src="${item.mediaUrl}" class="pm-story-media">`;
+            const imgEl = document.createElement("img");
+            imgEl.src = item.mediaUrl;
+            imgEl.className = "pm-story-media";
+            const showSmooth = () => requestAnimationFrame(() => requestAnimationFrame(() => imgEl.classList.add("is-loaded")));
+            imgEl.onload = showSmooth;
+            storyCard.appendChild(imgEl);
+            if (imgEl.complete) showSmooth();
           }
+
+          // Удаляем старые слои после завершения плавного перехода
+          setTimeout(() => {
+            oldMedias.forEach(el => el.remove());
+          }, 480);
+
 
           slideTitle.textContent = item.title;
           slideDesc.textContent = item.description;
 
-          barFills.forEach((fill, i) => {
+                    barFills.forEach((fill, i) => {
             fill.style.width = i < idx ? "100%" : "0%";
           });
+
+                    // Отрисовка watermark: логотип (если задан watermarkLogo) или текст (watermarkText / название клиники)
+          const wmText = (item.watermarkText || "").trim() || defaultClinicName;
+          const wmLogo = (item.watermarkLogo || "").trim();
+          const wmUrl = (item.watermarkUrl || "").trim();
+          const wmWidth = item.watermarkWidth ? `${item.watermarkWidth}px` : "90px";
+          const wmHeight = item.watermarkHeight ? `${item.watermarkHeight}px` : "28px";
+
+          if (watermarkSlot) {
+            const innerContent = wmLogo
+              ? `<img src="${wmLogo}" alt="${wmText}" class="pm-watermark-logo" style="--wm-logo-w:${wmWidth}; --wm-logo-h:${wmHeight};">`
+              : `${wmText}${wmUrl ? " ↗" : ""}`;
+
+            const extraClass = wmLogo ? "pm-watermark has-logo" : "pm-watermark";
+
+            if (wmUrl) {
+              watermarkSlot.innerHTML = `<a href="${wmUrl}" target="_blank" rel="noopener noreferrer" class="${extraClass}" onpointerdown="event.stopPropagation()" onclick="event.stopPropagation()">${innerContent}</a>`;
+            } else {
+              watermarkSlot.innerHTML = `<span class="${extraClass}" onpointerdown="event.stopPropagation()" onclick="event.stopPropagation()">${innerContent}</span>`;
+            }
+          }
 
           elapsedBeforePause = 0;
           startTime = performance.now();
           cancelAnimationFrame(rafId);
           runProgress(item.durationSec * 1000);
         }
+
 
 
 
