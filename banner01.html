@@ -4,8 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Тест баннера в VS Code</title>
-  <!-- Подключаем SweetAlert2 из интернета -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.js"></script>
 
   <style>
     body {
@@ -31,93 +32,138 @@
 </head>
 <body>
 
- <template id="promo-banner-template">
-  <style>
-    /* 1. Убираем лишние внутренние поля самого модального окна SweetAlert */
-.swal2-popup {
-  padding: 16px 0 20px !important;
-  border-radius: 20px !important;
-}
 
-/* 2. Задаём единый тонкий отступ слева и справа для всего содержимого (регулируйте 12px) */
-.swal2-html-container {
-  margin: 0 !important;
-  padding: 0 12px !important;
-  overflow: visible !important;
-}
-.swal2-container {
-  padding: 8px !important;
-}
-/* Карточка слайдера остаётся ровно по ширине полей формы */
-.pm-story-card {
-  position: relative;
-  width: 100%;
-  height: 210px;
-  border-radius: 14px;
-  overflow: hidden;
-  background-color: #f3f4f6;
-  border: none;
-  cursor: pointer;
-  touch-action: pan-y;
-}
-    .pm-root {
-      font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
-      color: #111827;
-      box-sizing: border-box;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
+    <template id="promo-banner-template">
+  <style>
+        @property --pm-angle {
+      syntax: "<angle>";
+      initial-value: 0deg;
+      inherits: false;
     }
 
-    /* Прячем крестик по умолчанию (для Экрана 1 и Экрана 5) и убираем квадратную рамку */
-.swal2-close {
-  display: none !important;
-  box-shadow: none !important;
-  outline: none !important;
-  border: none !important;
-  background: transparent !important;
-}
+       @property --pm-angle {
+      syntax: "<angle>";
+      initial-value: 0deg;
+      inherits: false;
+    }
 
-.swal2-close:focus,
-.swal2-close:hover {
-  box-shadow: none !important;
-  outline: none !important;
-  background: transparent !important;
-}
+    .pm-overlay {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100vh;
+      height: 100dvh;
+      background: #e7ebf0;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+      box-sizing: border-box;
+      overflow-y: auto;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
 
-/* Показываем крестик только когда открыт баннер (Экран 2–4) */
-.swal2-popup.pm-show-close .swal2-close {
-  display: flex !important;
-}
+    .pm-overlay.is-visible {
+      opacity: 1;
+    }
 
-    /* ================= ЭКРАН 1: КРУПНАЯ ГАЛОЧКА ПО ЦЕНТРУ ================= */
+    .pm-root {
+      position: relative;
+      width: 100%;
+      max-width: 440px;
+      max-height: calc(100dvh - 24px);
+      overflow-y: auto;
+      background: #e7ebf0;
+      border-radius: 26px;
+      padding: 16px 16px 28px;
+      box-shadow: 14px 14px 28px rgba(163, 177, 198, 0.6),
+                  -14px -14px 28px rgba(255, 255, 255, 0.92);
+      font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+      color: #1f2937;
+      box-sizing: border-box;
+      user-select: none;
+    }
+
+        .pm-close {
+      position: absolute;
+      top: 18px;
+      right: 16px;
+      width: 34px;
+      height: 34px;
+      border: none;
+      background: #e7ebf0;
+      box-shadow: 4px 4px 8px rgba(163, 177, 198, 0.55),
+                  -4px -4px 8px rgba(255, 255, 255, 0.9);
+      color: #6b7280;
+      font-size: 20px;
+      line-height: 1;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 0;
+      border-radius: 50%;
+      transition: box-shadow 0.15s ease, color 0.15s ease;
+      z-index: 10;
+    }
+
+
+    .pm-close:hover {
+      color: #111827;
+      box-shadow: inset 3px 3px 6px rgba(163, 177, 198, 0.55),
+                  inset -3px -3px 6px rgba(255, 255, 255, 0.9);
+    }
+
+
+
+    .pm-root.is-expanded .pm-close {
+      display: flex;
+    }
+
+    @media (max-height: 680px) {
+      .pm-overlay {
+        align-items: flex-start;
+        padding: 8px;
+      }
+      .pm-root {
+        max-height: calc(100dvh - 16px);
+        padding: 12px 12px 14px;
+      }
+      .pm-story-card {
+        height: 160px;
+      }
+    }
+
+
+
+        /* ================= ЭКРАН 1 И ШАПКА ================= */
     .pm-hero-status {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 24px 12px 20px;
-      /* СКОРОСТЬ ПОДЪЁМА ГАЛОЧКИ ВВЕРХ (меняйте 0.6s на 0.4s или 0.8s) */
-      transition: all 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+      padding: 28px 12px 24px;
+      transition: all 0.55s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
-    .pm-circle {
-      /* РАЗМЕР КРУГА НА ЭКРАНЕ 1 И ЭКРАНЕ 5 (сейчас крупный 84x84 px) */
+        .pm-circle {
       width: 84px;
       height: 84px;
       border-radius: 50%;
-      border: 4px solid #059639; /* Толщина и цвет зелёной рамки */
-      background-color: #ffffff;
+      border: 4px solid #059639;
+      background-color: #e5e7eb;
       display: flex;
       align-items: center;
       justify-content: center;
       margin-bottom: 16px;
-      box-shadow: 0 8px 22px rgba(5, 150, 57, 0.14);
       animation: pmPop 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-      transition: all 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+      transition: all 0.55s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
+
     .pm-check {
-      /* РАЗМЕР САМОЙ ГАЛОЧКИ ВНУТРИ КРУГА */
       width: 42px;
       height: 42px;
       stroke: #059639;
@@ -128,7 +174,7 @@
       stroke-dasharray: 50;
       stroke-dashoffset: 50;
       animation: pmDraw 0.5s 0.15s ease forwards;
-      transition: all 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+      transition: all 0.55s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
     .pm-hero-title {
@@ -146,30 +192,37 @@
       text-align: center;
     }
 
-    /* ================= ЭКРАН 2: КОМПАКТНАЯ КАПСУЛА СВЕРХУ ================= */
+
+
+        /* ЭКРАН 2: Капсула укорочена справа на 38px под крестик */
+       /* ЭКРАН 2: Капсула укорочена справа на 38px под крестик */
     .pm-root.is-expanded .pm-hero-status {
       flex-direction: row;
-      background-color: #ecfdf5;
-      border: 1px solid #a7f3d0;
+      justify-content: flex-start;
+      width: calc(100% - 50px);
+      background-color: #e7ebf0;
+      border: none;
+      box-shadow: inset 3px 3px 6px rgba(163, 177, 198, 0.55),
+                  inset -3px -3px 6px rgba(255, 255, 255, 0.9);
       border-radius: 9999px;
-      padding: 8px 16px;
-      /* ОТСТУП СВЕРХУ 16px, ЧТОБЫ КРЕСТИК ЗАКРЫТИЯ НЕ НАЕЗЖАЛ НА КАПСУЛУ */
-      margin: 16px 0 12px;
+      padding: 7px 14px;
+      margin: 0 0 12px 0;
       gap: 10px;
+      box-sizing: border-box;
     }
 
+
     .pm-root.is-expanded .pm-circle {
-      /* Размер маленького круга в капсуле наверху */
-      width: 24px;
-      height: 24px;
+      width: 22px;
+      height: 22px;
       border-width: 2px;
       margin-bottom: 0;
-      box-shadow: none;
+      flex-shrink: 0;
     }
 
     .pm-root.is-expanded .pm-check {
-      width: 14px;
-      height: 14px;
+      width: 13px;
+      height: 13px;
       stroke-width: 3;
     }
 
@@ -181,82 +234,163 @@
       font-size: 13.5px;
       font-weight: 600;
       color: #065f46;
+      text-align: left;
     }
-    /* ================= ПЛАВНОЕ РАСКРЫТИЕ БАННЕРА СНИЗУ ================= */
+
+    /* ================= КОНТЕЙНЕР БАННЕРА ================= */
     .pm-body {
       max-height: 0;
       opacity: 0;
       overflow: hidden;
-      transform: translateY(14px);
-      /* СКОРОСТЬ РАСКРЫТИЯ НИЖНЕГО БЛОКА (меняйте 0.65s при желании) */
-      transition: max-height 0.65s cubic-bezier(0.22, 1, 0.36, 1),
-                  opacity 0.5s ease 0.1s,
-                  transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+      transform: translateY(12px);
+      transition: max-height 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+                  opacity 0.45s ease 0.1s,
+                  transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
-    .pm-root.is-expanded .pm-body {
-      max-height: 1200px;
+       .pm-root.is-expanded .pm-body {
+      max-height: 1300px;
       opacity: 1;
       transform: translateY(0);
+      padding: 0 10px 18px;
+      margin: 0 -10px;
     }
 
-    /* ================= БЕЙДЖ С НАХЛЁСТОМ (БЕЗ БЕЛОЙ РАМКИ) ================= */
+
     .pm-badge-wrap {
-      /* ЖЁСТКАЯ ВЫСОТА 26px — чтобы при скрытии бейджа картинка НЕ подпрыгивала */
-      height: 26px;
+      height: 24px;
       text-align: left;
-      padding-left: 14px;
-      margin-bottom: -12px; /* Нахлёст на верхний край картинки */
+      padding-left: 12px;
+      margin-bottom: -12px;
       position: relative;
       z-index: 3;
     }
 
     .pm-badge {
       display: inline-block;
-      background-color: #ffe4e6; /* Мягкий розовый фон как на макете */
-      color: #be123c;            /* Бордовый текст */
+      background-color: #ffe4e6;
+      color: #be123c;
       font-size: 12px;
       font-weight: 700;
-      padding: 4px 12px;
+      padding: 3px 11px;
       border-radius: 9999px;
-      border: none;              /* Без белой обводки */
     }
 
     .pm-badge.is-hidden {
-      visibility: hidden; /* Прячем, но сохраняем место в верстке */
+      visibility: hidden;
       opacity: 0;
     }
 
-    /* ================= КАРТОЧКА STORIES (ФОТО / ВИДЕО) ================= */
+
+
+        /* КАРТОЧКА СЛАЙДЕРА (убрано contain: strict для работы в Opera) */
+        /* КАРТОЧКА СЛАЙДЕРА (убрано contain: strict для работы в Opera) */
     .pm-story-card {
       position: relative;
       width: 100%;
-      /* ВЫСОТА КАРТИНКИ СЛАЙДЕРА (регулируйте от 180px до 240px) */
-      height: 210px;
-      border-radius: 16px;
+      height: 195px;
+      border-radius: 14px;
       overflow: hidden;
-      background-color: #f3f4f6; /* Светлый фон вместо чёрного квадрата */
+      background-color: #111827;
+      box-sizing: border-box;
       cursor: pointer;
       touch-action: pan-y;
     }
 
     .pm-story-media {
+      position: absolute;
+      top: 0;
+      left: 0;
       width: 100%;
       height: 100%;
       object-fit: cover;
       display: block;
+      border-radius: 14px;
+      opacity: 0;
+      transition: opacity 0.45s ease;
     }
 
-    /* ЗЕЛЁНЫЕ ПОЛОСКИ ПРОГРЕССА ПОД КАРТИНКОЙ */
+    .pm-story-media.is-loaded {
+      opacity: 1;
+    }
+
+    /* Водяной знак (текст или логотип) в левом нижнем углу слайда */
+    .pm-watermark {
+      position: absolute;
+      left: 10px;
+      bottom: 10px;
+      z-index: 5;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(15, 23, 42, 0.48);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      color: rgba(255, 255, 255, 0.92);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 9px;
+      border-radius: 12px;
+      text-decoration: none;
+      letter-spacing: 0.2px;
+      max-width: 75%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      opacity: var(--wm-opacity, 0.72);
+      transition: opacity 0.2s ease, background 0.2s ease, color 0.2s ease;
+    }
+
+    /* Если выводится логотип — убираем подложку и задаём управляемые размеры */
+    .pm-watermark.has-logo {
+      background: transparent;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      padding: 0;
+      border-radius: 0;
+    }
+
+    .pm-watermark-logo {
+      display: block;
+      max-width: var(--wm-logo-w, 90px);
+      max-height: var(--wm-logo-h, 28px);
+      width: auto;
+      height: auto;
+      object-fit: contain;
+    }
+
+    /* Некликабельный водяной знак (по умолчанию, без ссылки) */
+    span.pm-watermark {
+      cursor: default;
+    }
+
+    /* Кликабельный водяной знак (когда передан watermarkUrl) */
+    a.pm-watermark {
+      cursor: pointer;
+    }
+
+    a.pm-watermark:hover {
+      opacity: 1;
+      background: rgba(5, 150, 57, 0.9);
+      color: #ffffff;
+    }
+
+    a.pm-watermark.has-logo:hover {
+      background: transparent;
+      opacity: 1;
+    }
+
+
+
     .pm-progress-bars {
       display: flex;
       gap: 6px;
-      margin: 10px 0 12px;
+      margin: 8px 0 10px;
     }
 
     .pm-bar-track {
       flex: 1;
-      height: 4px; /* Толщина полосок прогресса */
+      height: 3.5px;
       background-color: #e5e7eb;
       border-radius: 9999px;
       overflow: hidden;
@@ -266,37 +400,33 @@
       width: 0%;
       height: 100%;
       background-color: #059639;
-      border-radius: 9999px;
     }
 
-    /* ================= ТЕКСТЫ СЛАЙДА (ЖЁСТКО 2 СТРОКИ — НОЛЬ ПРЫЖКОВ) ================= */
-    .pm-slide-info {
+
+
+        .pm-slide-info {
       text-align: left;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
     .pm-slide-title {
       margin: 0 0 4px;
-      font-size: 17.5px;
+      font-size: 17px;
       font-weight: 700;
       color: #111827;
-      line-height: 23px;
-      /* ВЫСОТА РОВНО ПОД 2 СТРОКИ (23px * 2 = 46px) */
-      height: 46px;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      line-clamp: 2;
-      -webkit-box-orient: vertical;
+      line-height: 24px;
+      height: 24px;
+      white-space: nowrap;
       overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .pm-slide-desc {
       margin: 0;
-      font-size: 14px;
+      font-size: 13.5px;
       color: #4b5563;
-      line-height: 21px;
-      /* ВЫСОТА РОВНО ПОД 2 СТРОКИ (21px * 2 = 42px) */
-      height: 42px;
+      line-height: 20px;
+      height: 40px;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       line-clamp: 2;
@@ -304,45 +434,109 @@
       overflow: hidden;
     }
 
-    /* Постоянный слоган по центру */
     .pm-static-slogan {
-      margin: 10px 0 14px;
-      padding-top: 10px;
+      margin: 10px 0;
+      padding: 9px 0;
       border-top: 1px solid #f3f4f6;
+      border-bottom: 1px solid #f3f4f6;
       text-align: center;
       font-size: 13.5px;
-      font-weight: 500;
+      font-weight: 600;
       color: #059639;
     }
 
-    /* ================= КРУПНЫЕ ПОЛЯ ФОРМЫ ДЛЯ СМАРТФОНА ================= */
+    /* ================= ФОРМА И ЗАГОЛОВОК ДАТЫ/ВРЕМЕНИ ================= */
     .pm-form {
       text-align: left;
     }
 
+    .pm-datetime-header {
+      margin: 12px 0 10px;
+    }
+
+    .pm-datetime-title {
+      margin: 0 0 2px;
+      font-size: 16px;
+      font-weight: 700;
+      color: #111827;
+    }
+
+    .pm-datetime-sub {
+      margin: 0;
+      font-size: 12.5px;
+      color: #6b7280;
+    }
+
     .pm-label {
       display: block;
-      font-size: 13.5px;
+      font-size: 13px;
       font-weight: 600;
       color: #1f2937;
       margin-bottom: 5px;
     }
 
-    .pm-field-box {
+        .pm-field-box {
       position: relative;
       margin-bottom: 12px;
+      border-radius: 14px;
+      padding: 2px;
+      background: transparent;
+      transition: background 0.25s ease;
+    }
+
+    /* Бегущая яркая цветная рамка по краям активного поля */
+       /* Короткий бегущий цветной штрих по краям активного поля */
+        /* Эстафета: плавный штрих подсвечивает только ПЕРВОЕ незаполненное поле и переходит к следующему */
+    .pm-expand-inner .pm-field-box:has(.is-placeholder):not(.pm-field-box:has(.is-placeholder) ~ .pm-field-box:has(.is-placeholder)) {
+      background: conic-gradient(
+        from var(--pm-angle),
+        transparent 0deg 250deg,
+        rgba(16, 185, 129, 0.25) 280deg,
+        #10b981 305deg,
+        rgba(16, 185, 129, 0.25) 330deg,
+        transparent 360deg
+      );
+      animation: pmBorderSpin 2s linear infinite;
+    }
+
+
+
+    @keyframes pmBorderSpin {
+      to { --pm-angle: 360deg; }
+    }
+
+    .pm-icon-left {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #6b7280;
+      font-size: 15px;
+      line-height: 1;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+    }
+
+    .pm-field-box:focus-within .pm-icon-left {
+      color: #059639;
     }
 
     .pm-input {
+      position: relative;
+      z-index: 1;
       width: 100%;
-      /* ВЫСОТА ПОЛЕЙ ВВОДА (удобно нажимать пальцем) */
-      height: 48px;
-      padding: 0 38px 0 14px;
-      border: 1.5px solid #e5e7eb;
+      height: 44px;
+      padding: 0 36px 0 38px;
+      border: none;
       border-radius: 12px;
-      font-size: 15px;
-      color: #111827;
-      background-color: #ffffff;
+      font-size: 14.5px;
+      color: #1f2937;
+      background-color: #e7ebf0;
+      box-shadow: inset 4px 4px 8px rgba(163, 177, 198, 0.58),
+                  inset -4px -4px 8px rgba(255, 255, 255, 0.92);
       box-sizing: border-box;
       outline: none;
       appearance: none;
@@ -350,13 +544,34 @@
     }
 
     .pm-input:focus {
-      border-color: #059639;
-      box-shadow: 0 0 0 3px rgba(5, 150, 57, 0.12);
+      box-shadow: inset 2px 2px 5px rgba(163, 177, 198, 0.45),
+                  inset -2px -2px 5px rgba(255, 255, 255, 0.85);
     }
+
+
+        /* Неактивное (серое) состояние для полей, пока ничего не выбрано */
+    .pm-input.is-placeholder {
+      color: #9ca3af !important;
+    }
+
+        /* Подсветка активных дней акции в календаре цветом бейджа */
+    .flatpickr-day.pm-promo-active-day {
+      background: #ecfdf5 !important;
+      border-color: #10b981 !important;
+      color: #065f46 !important;
+      font-weight: 700 !important;
+    }
+    .flatpickr-day.pm-promo-active-day.selected {
+      background: #059669 !important;
+      border-color: #059669 !important;
+      color: #ffffff !important;
+    }
+
+
 
     .pm-chevron {
       position: absolute;
-      right: 14px;
+      right: 13px;
       top: 50%;
       transform: translateY(-50%);
       color: #6b7280;
@@ -364,53 +579,60 @@
       display: flex;
     }
 
-    .pm-submit-btn {
-      width: 100%;
-      /* ВЫСОТА КНОПКИ ПОДТВЕРЖДЕНИЯ */
+         .pm-submit-btn {
+      display: block;
+      width: calc(100% - 12px);
       height: 50px;
-      margin-top: 4px;
-      background-color: #e5e7eb;
+      margin: 36px auto 6px;
+      background: #e7ebf0;
+      box-shadow: 7px 7px 14px rgba(163, 177, 198, 0.75),
+                  -7px -7px 14px rgba(255, 255, 255, 0.98);
+
       color: #9ca3af;
       border: none;
       border-radius: 9999px;
-      font-size: 15.5px;
-      font-weight: 600;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
       cursor: not-allowed;
-      transition: all 0.2s ease;
+      transition: transform 0.15s ease, box-shadow 0.25s ease, color 0.25s ease;
     }
 
+    /* Анимация градиента запускается сразу после заполнения всех полей */
     .pm-submit-btn.is-active {
-      background-color: #059639;
+      background: linear-gradient(90deg, #059639 0%, #34d399 35%, #10b981 65%, #059639 100%);
+      background-size: 200% 100%;
       color: #ffffff;
+      box-shadow: 6px 6px 14px rgba(5, 150, 57, 0.35),
+                  -5px -5px 12px rgba(255, 255, 255, 0.9);
       cursor: pointer;
-      box-shadow: 0 6px 16px rgba(5, 150, 57, 0.24);
+      animation: pmBtnGradient 2.2s linear infinite;
     }
 
-    /* ================= ЭКРАН 5: ФИНАЛ С ЗЕЛЁНОЙ КНОПКОЙ OK ================= */
-    /* Точные отступы как у .pm-hero-status на Экране 1 */
-.pm-final-screen {
-  display: none;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 24px 12px 20px;
-  text-align: center;
-}
+    .pm-submit-btn.is-active:active {
+      transform: scale(0.99);
+      box-shadow: inset 3px 3px 7px rgba(0, 0, 0, 0.22);
+    }
 
-    /* Компактная кнопка "OK" как на макете Экрана 5 */
-.pm-final-ok-btn {
-  margin-top: 22px;
-  min-width: 96px;
-  height: 42px;
-  padding: 0 26px;
-  background-color: #059639;
-  color: #ffffff;
-  border: none;
-  border-radius: 8px;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-}
+    /* При нажатии анимация замирает на время отправки и перехода к экрану 2 */
+    .pm-submit-btn.is-loading {
+      background: linear-gradient(90deg, #059639 0%, #34d399 35%, #10b981 65%, #059639 100%);
+      background-size: 200% 100%;
+      color: #ffffff;
+      box-shadow: 4px 4px 10px rgba(5, 150, 57, 0.3),
+                  -4px -4px 10px rgba(255, 255, 255, 0.85);
+      cursor: wait;
+      pointer-events: none;
+      animation: pmBtnGradient 2.2s linear infinite;
+      animation-play-state: paused;
+    }
+
+    @keyframes pmBtnGradient {
+      0% { background-position: 200% 0%; }
+      100% { background-position: 0% 0%; }
+    }
+
+
 
     @keyframes pmPop {
       0% { transform: scale(0.4); opacity: 0; }
@@ -421,9 +643,14 @@
       to { stroke-dashoffset: 0; }
     }
   </style>
-  <div id="pm-root" class="pm-root">
-    <!-- Шапка: Экран 1 -> Экран 2 -->
+
+
+
+    <div id="pm-root" class="pm-root">
+    <button type="button" id="pm-close-btn" class="pm-close" aria-label="Close">&times;</button>
+    <!-- Шапка -->
     <div class="pm-hero-status">
+
       <div class="pm-circle">
         <svg class="pm-check" viewBox="0 0 24 24">
           <polyline points="20 6 9 17 4 12"></polyline>
@@ -433,13 +660,15 @@
       <p id="pm-hero-sub" class="pm-hero-sub"></p>
     </div>
 
-    <!-- Основной контейнер баннера -->
+    <!-- Тело баннера -->
     <div id="pm-body" class="pm-body">
       <div class="pm-badge-wrap">
         <span id="pm-badge" class="pm-badge is-hidden"></span>
       </div>
 
-      <div id="pm-story-card" class="pm-story-card"></div>
+      <div id="pm-story-card" class="pm-story-card">
+          <div id="pm-watermark-slot"></div>
+        </div>
       <div id="pm-progress-bars" class="pm-progress-bars"></div>
 
       <div class="pm-slide-info">
@@ -450,23 +679,61 @@
       <div id="pm-static-slogan" class="pm-static-slogan"></div>
 
       <div id="pm-form-wrap" class="pm-form">
+        <!-- Поле 1: Специальное предложение -->
         <label id="pm-lbl-offer" class="pm-label" for="pm-select-offer"></label>
         <div class="pm-field-box">
+          <span class="pm-icon-left">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3.5" y="3.5" width="7" height="7" rx="1.5"></rect>
+              <rect x="13.5" y="3.5" width="7" height="7" rx="1.5"></rect>
+              <rect x="13.5" y="13.5" width="7" height="7" rx="1.5"></rect>
+              <rect x="3.5" y="13.5" width="7" height="7" rx="1.5"></rect>
+            </svg>
+          </span>
           <select id="pm-select-offer" class="pm-input"></select>
           <span class="pm-chevron">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
               <polyline points="6 9 12 15 18 9"></polyline>
             </svg>
           </span>
         </div>
 
-        <label id="pm-lbl-date" class="pm-label" for="pm-input-date"></label>
-        <div class="pm-field-box">
-          <input type="date" id="pm-input-date" class="pm-input">
+        <!-- Заголовок даты и времени -->
+        <div class="pm-datetime-header">
+          <h4 id="pm-dt-title" class="pm-datetime-title"></h4>
+          <p id="pm-dt-sub" class="pm-datetime-sub"></p>
         </div>
 
+        <!-- Поле 2: Дата -->
+        <label id="pm-lbl-date" class="pm-label" for="pm-input-date"></label>
+        <div class="pm-field-box">
+          <span class="pm-icon-left">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4.5" width="18" height="16.5" rx="2.5"></rect>
+              <line x1="16" y1="2.5" x2="16" y2="6.5"></line>
+              <line x1="8" y1="2.5" x2="8" y2="6.5"></line>
+              <line x1="3" y1="9.5" x2="21" y2="9.5"></line>
+            </svg>
+          </span>
+         <input type="text" id="pm-input-date" class="pm-input" placeholder="Tarix" readonly>
+
+
+          <span class="pm-chevron">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </span>
+        </div>
+
+        <!-- Поле 3: Свободное время -->
         <label id="pm-lbl-time" class="pm-label" for="pm-select-time"></label>
         <div class="pm-field-box">
+          <span class="pm-icon-left">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9.5"></circle>
+              <polyline points="12 6.5 12 12 15.5 14"></polyline>
+            </svg>
+          </span>
           <select id="pm-select-time" class="pm-input">
             <option id="pm-opt-time-def" value=""></option>
             <option value="10:00">10:00</option>
@@ -475,7 +742,7 @@
             <option value="16:30">16:30</option>
           </select>
           <span class="pm-chevron">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
               <polyline points="6 9 12 15 18 9"></polyline>
             </svg>
           </span>
@@ -484,239 +751,499 @@
         <button type="button" id="pm-submit-btn" class="pm-submit-btn" disabled></button>
       </div>
     </div>
-
-    <!-- Экран 5: Финал после подтверждения -->
-    <div id="pm-final-screen" class="pm-final-screen">
-      <div class="pm-circle">
-        <svg class="pm-check" viewBox="0 0 24 24">
-          <polyline points="20 6 9 17 4 12"></polyline>
-        </svg>
-      </div>
-      <h2 id="pm-final-title" class="pm-hero-title"></h2>
-      <p id="pm-final-sub" class="pm-hero-sub"></p>
-      <button type="button" id="pm-final-ok-btn" class="pm-final-ok-btn">OK</button>
-    </div>
   </div>
 </template>
 
-  <script>
-    // Тестовые данные (имитация ответа из вашей таблицы Promotions на языке az)
-    const mockPromotions = [
-      {
-        id: "promo_2",
-        type: "Событие",
-        badge: "", // Пустой бейдж — красная плашка скроется автоматически
-        title: "29 Noyabr Cərrah-ortoped qəbulu",
-        description: "Dəvət olunmuş mütəxəssisin öncədən qeydiyyatla müayinəsi.",
-        serviceName: "Cərrah-ortoped qəbulu",
-        fixedDate: "2026-11-29",
-        durationSec: 5,
-        mediaUrl: "https://raw.githubusercontent.com/ger0n/img_or_models/refs/heads/main/poster_blood02.png",
-        mediaType: "image"
-      },
-      {
-        id: "promo_3",
-        type: "Событие",
-        badge: "",
-        title: "20 Dekabr Aparıcı cərrahın qəbulu",
-        description: "Klinikamızda cərrah konsultasiyasına yazılın.",
-        serviceName: "Cərrah qəbulu",
-        fixedDate: "2026-12-20",
-        durationSec: 5,
-        mediaUrl: "https://raw.githubusercontent.com/ger0n/img_or_models/refs/heads/main/f1.jpg",
-        mediaType: "image"
-      },
-      {
-        id: "promo_4",
-        type: "Акция",
-        badge: "−30%",
-        title: "30% endirimlə peşəkar diş təmizliyi",
-        description: "Xüsusi qiymətlə kompleks ağız boşluğu gigiyenası.",
-        serviceName: "Peşəkar təmizlik (Aksiya −30%)",
-        fixedDate: "",
-        durationSec: 5,
-        mediaUrl: "https://ger0n.github.io/img_or_models/blood02.mp4",
-        mediaType: "image"
-      }
-    ];
 
-    function runLocalBannerTest() {
-      const tpl = document.getElementById("promo-banner-template");
-      if (!tpl) return;
 
-      Swal.fire({
-        width: "460px",
-        padding: "20px",
-        background: "#ffffff",
-        html: tpl.innerHTML,
-        showConfirmButton: false,
-        showCloseButton: true,
-        didOpen: () => {
-          const root = document.getElementById("pm-root");
-          const badgeEl = document.getElementById("pm-badge");
-          const storyCard = document.getElementById("pm-story-card");
-          const barsWrap = document.getElementById("pm-progress-bars");
-          const slideTitle = document.getElementById("pm-slide-title");
-          const slideDesc = document.getElementById("pm-slide-desc");
-          const offerSelect = document.getElementById("pm-select-offer");
-          const dateInput = document.getElementById("pm-input-date");
-          const timeSelect = document.getElementById("pm-select-time");
-          const submitBtn = document.getElementById("pm-submit-btn");
+<script>
+  const mockPromotions = [
+    
+    
+    {
+      id: "promo_2",
+      type: "Событие",
+      badge: "",
+      title: "29 Noyabr Cərrah-ortoped qəbulu",
+      description: "Dəvət olunmuş mütəxəssisin öncədən qeydiyyatla müayinəsi.",
+      serviceName: "Cərrah-ortoped qəbulu",
+      fixedDate: "29-11-2026",
+      durationSec: 5,
+      mediaUrl: "https://raw.githubusercontent.com/ger0n/img_or_models/refs/heads/main/f1.jpg",
+      mediaType: "image"
+      
+    },
+    {
+      id: "promo_3",
+      type: "Событие",
+      badge: "",
+      title: "20 Dekabr Aparıcı cərrahın qəbulu",
+      description: "Klinikamızda cərrah konsultasiyasına yazılın.",
+      serviceName: "Cərrah qəbulu",
+      fixedDate: "2026-12-20",
+      durationSec: 5,
+      mediaUrl: "https://raw.githubusercontent.com/ger0n/img_or_models/refs/heads/main/f2.jpeg",
+      mediaType: "image"
+    },
+    
+    {
+        
+      id: "promo_4",
+      type: "Акция",
+      badge: "−30%",
+      title: "30% endirimlə peşəkar diş təmizliyi",
+      description: "Xüsusi qiymətlə kompleks ağız boşluğu gigiyenası.",
+      serviceName: "Peşəkar təmizlik (Aksiya −30%)",
+      startDate: "2026-10-30", 
+      endDate: "2026-11-30",
+      fixedDate: "",
+      durationSec: 5,
+      mediaUrl: "https://ger0n.github.io/img_or_models/blood02.mp4",
+      posterUrl: "https://raw.githubusercontent.com/ger0n/img_or_models/refs/heads/main/poster_blood02.png",
+      mediaType: "video"
 
-          // Тексты интерфейса (на примере az)
-          document.getElementById("pm-hero-title").textContent = "Uğurlu!";
-          document.getElementById("pm-hero-sub").textContent = "Qeydiyyat uğurla yaradıldı!";
-          document.getElementById("pm-static-slogan").textContent = "Xüsusi təklifimizdən yararlanın";
-          document.getElementById("pm-lbl-offer").textContent = "Xüsusi təklif";
-          document.getElementById("pm-lbl-date").textContent = "Tarix";
-          document.getElementById("pm-lbl-time").textContent = "Boş vaxt";
-          document.getElementById("pm-opt-time-def").textContent = "Boş vaxt seçin";
-          submitBtn.textContent = "Əlavə qeydiyyatı təsdiqləyin";
+     
+    }
+  ];
 
-          // Заполняем выпадающий список
-          const defOpt = document.createElement("option");
-          defOpt.value = "";
-          defOpt.textContent = "Təklifi seçin";
-          offerSelect.appendChild(defOpt);
+// TEST_WATERMARK (удалить при подключении таблицы):
+    // Слайд 1: некликабельный текст по умолчанию ("AlfaMed Plus", без ссылки)
+    // Слайд 2: кликабельный текст со ссылкой
+    mockPromotions[1].watermarkText = "AlfaMed Info";
+    mockPromotions[1].watermarkUrl = "https://google.com";
+    mockPromotions[1].watermarkOpacity = 0.8;
 
-          mockPromotions.forEach((it) => {
-            const opt = document.createElement("option");
-            opt.value = it.id;
-            opt.textContent = it.serviceName;
-            opt.dataset.fixedDate = it.fixedDate || "";
-            offerSelect.appendChild(opt);
-          });
+    // Слайд 3: некликабельный логотип (без ссылки)
+    mockPromotions[2].watermarkLogo = "https://raw.githubusercontent.com/ger0n/img_or_models/refs/heads/main/amo.png";
+    mockPromotions[2].watermarkWidth = 64;
+    mockPromotions[2].watermarkHeight = 24;
+    mockPromotions[2].watermarkOpacity = 0.7;
 
-          // Зелёные полоски прогресса
-          const barFills = [];
-          mockPromotions.forEach(() => {
-            const track = document.createElement("div");
-            track.className = "pm-bar-track";
-            const fill = document.createElement("div");
-            fill.className = "pm-bar-fill";
-            track.appendChild(fill);
-            barsWrap.appendChild(track);
-            barFills.push(fill);
-          });
+      let activeBannerCleanup = null;
 
-          let currentIndex = 0;
-          let rafId = null;
-          let startTime = 0;
-          let elapsedBeforePause = 0;
-          let isPaused = false;
+  function closePromoBanner() {
+    if (typeof activeBannerCleanup === "function") {
+      activeBannerCleanup();
+      activeBannerCleanup = null;
+    }
+  }
 
-          function renderSlide(idx) {
-            currentIndex = idx;
-            const item = mockPromotions[idx];
+  function openPromoBanner() {
+    const tpl = document.getElementById("promo-banner-template");
+    if (!tpl) return;
 
-            if (item.badge) {
-              badgeEl.textContent = item.badge;
-              badgeEl.classList.remove("is-hidden");
-            } else {
-              badgeEl.classList.add("is-hidden");
-            }
+    closePromoBanner();
 
-            storyCard.innerHTML = `<img src="${item.mediaUrl}" class="pm-story-media">`;
-            slideTitle.textContent = item.title;
-            slideDesc.textContent = item.description;
+    const overlay = document.createElement("div");
+    overlay.id = "pm-overlay";
+    overlay.className = "pm-overlay";
+    overlay.innerHTML = tpl.innerHTML;
+    document.body.appendChild(overlay);
 
-            barFills.forEach((fill, i) => {
-              fill.style.width = i < idx ? "100%" : "0%";
-            });
+    requestAnimationFrame(() => {
+      overlay.classList.add("is-visible");
+    });
 
-            elapsedBeforePause = 0;
-            startTime = performance.now();
-            cancelAnimationFrame(rafId);
-            runProgress(item.durationSec * 1000);
+    const root = overlay.querySelector("#pm-root");
+    const closeBtn = overlay.querySelector("#pm-close-btn");
+    const badgeEl = overlay.querySelector("#pm-badge");
+    const storyCard = overlay.querySelector("#pm-story-card");
+    const barsWrap = overlay.querySelector("#pm-progress-bars");
+    const slideTitle = overlay.querySelector("#pm-slide-title");
+    const slideDesc = overlay.querySelector("#pm-slide-desc");
+    const offerSelect = overlay.querySelector("#pm-select-offer");
+    const dateInput = overlay.querySelector("#pm-input-date");
+    const timeSelect = overlay.querySelector("#pm-select-time");
+    const submitBtn = overlay.querySelector("#pm-submit-btn");
+
+    overlay.querySelector("#pm-hero-title").textContent = "Uğurlu!";
+    overlay.querySelector("#pm-hero-sub").textContent = "Qeydiyyat uğurla yaradıldı!";
+    overlay.querySelector("#pm-static-slogan").textContent = "Xüsusi təklifimizdən yararlanın";
+    overlay.querySelector("#pm-lbl-offer").textContent = "Xüsusi təklif";
+    overlay.querySelector("#pm-lbl-date").textContent = "Tarix";
+    overlay.querySelector("#pm-lbl-time").textContent = "Vaxt";
+    overlay.querySelector("#pm-opt-time-def").textContent = "vaxt seçin";
+    submitBtn.textContent = "Əlavə qeydiyyatı təsdiqləyin";
+
+
+        const defOpt = document.createElement("option");
+        defOpt.value = "";
+        defOpt.textContent = "Təklifi seçin";
+        offerSelect.appendChild(defOpt);
+
+        mockPromotions.forEach((it) => {
+        const opt = document.createElement("option");
+        opt.value = it.id;
+        opt.textContent = it.serviceName;
+        opt.dataset.startDate = it.startDate || it.fixedDate || "";
+        opt.dataset.endDate = it.endDate || it.fixedDate || "";
+        offerSelect.appendChild(opt);
+      });
+
+        const barFills = [];
+        mockPromotions.forEach(() => {
+          const track = document.createElement("div");
+          track.className = "pm-bar-track";
+          const fill = document.createElement("div");
+          fill.className = "pm-bar-fill";
+          track.appendChild(fill);
+          barsWrap.appendChild(track);
+          barFills.push(fill);
+        });
+
+        let currentIndex = 0;
+        let rafId = null;
+        let startTime = 0;
+        let elapsedBeforePause = 0;
+        let isPaused = false;
+
+        function renderSlide(idx) {
+          currentIndex = idx;
+          const item = mockPromotions[idx];
+          const defaultClinicName = "AlfaMed Plus"; // по умолчанию название клиники (позже подтянем из настроек)
+         const watermarkSlot = overlay.querySelector("#pm-watermark-slot");
+
+
+          if (item.badge) {
+            badgeEl.textContent = item.badge;
+            badgeEl.classList.remove("is-hidden");
+          } else {
+            badgeEl.classList.add("is-hidden");
           }
 
-          function runProgress(durationMs) {
-            function tick(now) {
-              if (!isPaused) {
-                const elapsed = elapsedBeforePause + (now - startTime);
-                const pct = Math.min(100, (elapsed / durationMs) * 100);
-                barFills[currentIndex].style.width = pct + "%";
-                if (pct >= 100) {
-                  renderSlide((currentIndex + 1) % mockPromotions.length);
-                  return;
-                }
+                    // Сохраняем старые медиа-элементы на 300мс, чтобы не было чёрной/серой вспышки при переходе
+          const oldMedias = storyCard.querySelectorAll(".pm-story-media");
+
+          if (item.mediaType === "video") {
+            // 1. Если есть постер — показываем его сразу как подложку, пока грузится видео
+            if (item.posterUrl) {
+              const posterImg = document.createElement("img");
+              posterImg.src = item.posterUrl;
+              posterImg.className = "pm-story-media is-loaded";
+              storyCard.appendChild(posterImg);
+            }
+
+            // 2. Поверх постера плавно проявляем само видео, когда первый кадр готов (loadeddata)
+            const videoEl = document.createElement("video");
+            videoEl.src = item.mediaUrl;
+            if (item.posterUrl) videoEl.poster = item.posterUrl;
+            videoEl.className = "pm-story-media";
+            videoEl.autoplay = true;
+            videoEl.loop = true;
+            videoEl.muted = true;
+            videoEl.defaultMuted = true;
+            videoEl.playsInline = true;
+
+            videoEl.addEventListener("loadeddata", () => {
+              videoEl.classList.add("is-loaded");
+            }, { once: true });
+
+            storyCard.appendChild(videoEl);
+            videoEl.play().catch(() => {});
+          } else {
+            const imgEl = document.createElement("img");
+            imgEl.src = item.mediaUrl;
+            imgEl.className = "pm-story-media";
+            const showSmooth = () => requestAnimationFrame(() => requestAnimationFrame(() => imgEl.classList.add("is-loaded")));
+            imgEl.onload = showSmooth;
+            storyCard.appendChild(imgEl);
+            if (imgEl.complete) showSmooth();
+          }
+
+          // Удаляем старые слои после завершения плавного перехода
+          setTimeout(() => {
+            oldMedias.forEach(el => el.remove());
+          }, 480);
+
+
+          slideTitle.textContent = item.title;
+          slideDesc.textContent = item.description;
+
+                    barFills.forEach((fill, i) => {
+            fill.style.width = i < idx ? "100%" : "0%";
+          });
+
+                 // Отрисовка watermark: логотип (watermarkLogo) или текст (watermarkText / название клиники)
+          const wmText = (item.watermarkText || "").trim() || defaultClinicName;
+          const wmLogo = (item.watermarkLogo || "").trim();
+          const wmUrl = (item.watermarkUrl || "").trim();
+          const wmWidth = item.watermarkWidth ? `${item.watermarkWidth}px` : "90px";
+          const wmHeight = item.watermarkHeight ? `${item.watermarkHeight}px` : "28px";
+          const wmOpacity = item.watermarkOpacity !== undefined && item.watermarkOpacity !== ""
+            ? Number(item.watermarkOpacity)
+            : 0.72;
+
+          if (watermarkSlot) {
+            const wmStyle = `--wm-opacity:${wmOpacity}; --wm-logo-w:${wmWidth}; --wm-logo-h:${wmHeight};`;
+            const innerContent = wmLogo
+              ? `<img src="${wmLogo}" alt="${wmText}" class="pm-watermark-logo">`
+              : `${wmText}${wmUrl ? " ↗" : ""}`;
+
+            const extraClass = wmLogo ? "pm-watermark has-logo" : "pm-watermark";
+
+            if (wmUrl) {
+              watermarkSlot.innerHTML = `<a href="${wmUrl}" target="_blank" rel="noopener noreferrer" class="${extraClass}" style="${wmStyle}">${innerContent}</a>`;
+            } else {
+              watermarkSlot.innerHTML = `<span class="${extraClass}" style="${wmStyle}">${innerContent}</span>`;
+            }
+          }
+
+
+          elapsedBeforePause = 0;
+          startTime = performance.now();
+          cancelAnimationFrame(rafId);
+          runProgress(item.durationSec * 1000);
+        }
+
+
+
+
+                function runProgress(durationMs) {
+          function tick(now) {
+            if (!isPaused) {
+              const elapsed = elapsedBeforePause + (now - startTime);
+              const pct = Math.min(100, (elapsed / durationMs) * 100);
+              barFills[currentIndex].style.width = pct + "%";
+              if (pct >= 100) {
+                renderSlide((currentIndex + 1) % mockPromotions.length);
+                return;
               }
-              rafId = requestAnimationFrame(tick);
             }
             rafId = requestAnimationFrame(tick);
           }
+          rafId = requestAnimationFrame(tick);
+        }
 
-          // Жесты (тап влево/вправо, удержание = пауза, свайп)
-          let touchStartX = 0;
-          storyCard.addEventListener("pointerdown", (e) => {
-            touchStartX = e.clientX;
+              let touchStartX = 0;
+        let isWatermarkTouch = false;
+
+        storyCard.addEventListener("pointerdown", (e) => {
+          if (e.target.closest(".pm-watermark")) {
+            isWatermarkTouch = true;
+            return;
+          }
+          isWatermarkTouch = false;
+          touchStartX = e.clientX;
+          isPaused = true;
+          elapsedBeforePause += performance.now() - startTime;
+        });
+
+        storyCard.addEventListener("pointerup", (e) => {
+          if (isWatermarkTouch || e.target.closest(".pm-watermark")) {
+            isWatermarkTouch = false;
+            return;
+          }
+          const diffX = e.clientX - touchStartX;
+
+          if (Math.abs(diffX) > 35) {
+            // Свайп влево/вправо листает слайды
+            const nextIdx = diffX < 0
+              ? (currentIndex + 1) % mockPromotions.length
+              : (currentIndex - 1 + mockPromotions.length) % mockPromotions.length;
+            renderSlide(nextIdx);
+            if (offerSelect.value !== "") {
+              isPaused = true;
+              barFills[nextIdx].style.width = "100%";
+              offerSelect.value = mockPromotions[nextIdx].id;
+              offerSelect.dispatchEvent(new Event("change"));
+            } else {
+              isPaused = false;
+              startTime = performance.now();
+            }
+          } else if (Math.abs(diffX) < 8) {
+            // Клик по слайду: застываем ИМЕННО на текущем слайде и выбираем его в списке
+            const cur = mockPromotions[currentIndex];
             isPaused = true;
-            elapsedBeforePause += performance.now() - startTime;
-          });
-
-          storyCard.addEventListener("pointerup", (e) => {
+            barFills[currentIndex].style.width = "100%";
+            if (cur && cur.id) {
+              offerSelect.value = cur.id;
+              offerSelect.dispatchEvent(new Event("change"));
+            }
+          } else {
             isPaused = false;
             startTime = performance.now();
-            const diffX = e.clientX - touchStartX;
-            if (Math.abs(diffX) > 35) {
-              renderSlide(diffX < 0 ? (currentIndex + 1) % mockPromotions.length : (currentIndex - 1 + mockPromotions.length) % mockPromotions.length);
-            } else if (Math.abs(diffX) < 8) {
-              const rect = storyCard.getBoundingClientRect();
-              if (e.clientX - rect.left < rect.width * 0.3) {
-                renderSlide((currentIndex - 1 + mockPromotions.length) % mockPromotions.length);
-              } else {
-                const cur = mockPromotions[currentIndex];
-                if (cur.serviceName) {
-                  offerSelect.value = cur.id;
-                  offerSelect.dispatchEvent(new Event("change"));
-                }
-                renderSlide((currentIndex + 1) % mockPromotions.length);
-              }
+          }
+        });
+
+            
+          // Умная логика дат, автоподстановки времени и серого/активного цвета (Шаг 3)
+      let fpInstance = null;
+
+      function formatLocalYMD(dateObj) {
+        const y = dateObj.getFullYear();
+        const m = String(dateObj.getMonth() + 1).padStart(2, "0");
+        const d = String(dateObj.getDate()).padStart(2, "0");
+        return `${y}-${m}-${d}`;
+      }
+
+           function updateDateAndSlots(opt) {
+        if (fpInstance) {
+          fpInstance.destroy();
+          fpInstance = null;
+        }
+
+      if (!opt) {
+          dateInput.readOnly = true;
+          dateInput.style.backgroundColor = "";
+          dateInput.value = "";
+          timeSelect.value = "";
+          validateForm();
+          return;
+        }
+
+        const startStr = opt.dataset.startDate;
+        const endStr = opt.dataset.endDate;
+        const todayStr = formatLocalYMD(new Date());
+
+        // Приводим DD-MM-YYYY (если вдруг осталось как в promo_2 "29-11-2026") к YYYY-MM-DD для flatpickr
+        const normalizeYMD = (s) => {
+          if (!s) return "";
+          const m = s.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+          return m ? `${m}-${m}-${m}` : s;
+        };
+
+        const normStart = normalizeYMD(startStr);
+        const normEnd = normalizeYMD(endStr);
+        const isSingleDay = normStart && normEnd && normStart === normEnd;
+
+        // Стартовая дата: для 1 дня — сама дата события; для периода — не раньше сегодняшнего дня и не раньше начала акции
+        const minDateStr = isSingleDay
+          ? normStart
+          : (normStart && normStart > todayStr ? normStart : todayStr);
+        const maxDateStr = normEnd || null;
+        const defaultDateStr = (maxDateStr && minDateStr > maxDateStr) ? maxDateStr : minDateStr;
+
+        dateInput.readOnly = false;
+        // Для 1 дня делаем лёгкий серый фон поля как подсказку, что дата фиксирована, но календарь по клику откроется
+        dateInput.style.backgroundColor = isSingleDay ? "#f3f4f6" : "#ffffff";
+        dateInput.value = defaultDateStr;
+
+                fpInstance = flatpickr(dateInput, {
+          dateFormat: "Y-m-d",       // это значение уйдёт на сервер при отправке (2026-12-20)
+          altInput: true,            // включаем красивое поле для глаз клиента
+          altFormat: "d-m-Y",        // клиент видит привычный формат (20-12-2026)
+          altInputClass: "pm-input", // сохраняем ваши точные стили поля
+          defaultDate: defaultDateStr,
+          minDate: minDateStr,
+          maxDate: maxDateStr,
+          disableMobile: true,
+          onDayCreate: (dObj, dStr, fp, dayElem) => {
+            const d = formatLocalYMD(dayElem.dateObj);
+            if (d >= minDateStr && (!maxDateStr || d <= maxDateStr)) {
+              dayElem.classList.add("pm-promo-active-day");
             }
-          });
-
-          offerSelect.addEventListener("change", () => {
+          },
+          onChange: () => {
             isPaused = true;
-            const opt = offerSelect.options[offerSelect.selectedIndex];
-            if (opt?.dataset?.fixedDate) dateInput.value = opt.dataset.fixedDate;
+            if (timeSelect.options.length > 1 && !timeSelect.value) {
+              timeSelect.selectedIndex = 1;
+            }
             validateForm();
-          });
+          }
+        });
 
-          dateInput.addEventListener("change", () => { isPaused = true; validateForm(); });
-          timeSelect.addEventListener("change", () => { isPaused = true; validateForm(); });
 
-          function validateForm() {
-            const ready = Boolean(offerSelect.value && dateInput.value && timeSelect.value);
-            submitBtn.disabled = !ready;
-            submitBtn.classList.toggle("is-active", ready);
+        // Автовыбор первого доступного слота времени
+        if (timeSelect.options.length > 1) {
+          timeSelect.selectedIndex = 1;
+        }
+        validateForm();
+      }
+
+
+
+
+        offerSelect.addEventListener("change", () => {
+          if (offerSelect.value === "") {
+            isPaused = false;
+            elapsedBeforePause = 0;
+            startTime = performance.now();
+            updateDateAndSlots(null);
+            return;
           }
 
-          submitBtn.addEventListener("click", () => {
-            cancelAnimationFrame(rafId);
-            Swal.getPopup()?.classList.remove("pm-show-close"); // Прячем крестик на финале
-            document.querySelector(".pm-hero-status").style.display = "none";
-            document.getElementById("pm-body").style.display = "none";
-            const finalScreen = document.getElementById("pm-final-screen");
-            document.getElementById("pm-final-title").textContent = "Uğurlu!";
-            document.getElementById("pm-final-sub").textContent = "Əlavə qeydiyyat uğurla yaradıldı!";
-            finalScreen.style.display = "flex";
-            document.getElementById("pm-final-ok-btn").addEventListener("click", () => Swal.close());
-          });
+          isPaused = true;
+          const selectedIdx = mockPromotions.findIndex(p => p.id === offerSelect.value);
+          if (selectedIdx !== -1 && selectedIdx !== currentIndex) {
+            renderSlide(selectedIdx);
+          }
+          if (selectedIdx !== -1) {
+            barFills[selectedIdx].style.width = "100%";
+          }
 
-          // Пауза 1.1 сек на Экране 1 -> плавный переход в Экран 2
-          setTimeout(() => {
-  root.classList.add("is-expanded");
-  Swal.getPopup()?.classList.add("pm-show-close"); // Показываем крестик
-  renderSlide(0);
-}, 1800);
+          const opt = offerSelect.options[offerSelect.selectedIndex];
+          updateDateAndSlots(opt);
+        });
+
+        // При ручном выборе даты из календаря — автовыбор первого слота времени и проверка формы
+        dateInput.addEventListener("change", () => {
+          isPaused = true;
+          if (dateInput.value && timeSelect.options.length > 1 && !timeSelect.value) {
+            timeSelect.selectedIndex = 1;
+          }
+          validateForm();
+        });
+
+        timeSelect.addEventListener("change", () => {
+          isPaused = true;
+          validateForm();
+        });
+
+        function validateForm() {
+          // Серый цвет для пустых полей (плейсхолдеров), тёмный — для выбранных
+          offerSelect.classList.toggle("is-placeholder", offerSelect.value === "");
+          dateInput.classList.toggle("is-placeholder", dateInput.value === "");
+          timeSelect.classList.toggle("is-placeholder", timeSelect.value === "");
+
+                  const ok = offerSelect.value !== "" && dateInput.value !== "" && timeSelect.value !== "";
+          submitBtn.disabled = !ok;
+          submitBtn.classList.toggle("is-active", ok);
         }
-      });
-    }
-
-    window.addEventListener("DOMContentLoaded", runLocalBannerTest);
-  
 
 
-  </script>
+             activeBannerCleanup = () => {
+          if (fpInstance) fpInstance.destroy();
+          cancelAnimationFrame(rafId);
+          overlay.remove();
+        };
+
+        closeBtn.addEventListener("click", closePromoBanner);
+        overlay.addEventListener("click", (e) => {
+          if (e.target === overlay) closePromoBanner();
+        });
+
+        // Кнопка отправки (демо-финал)
+       // Кнопка отправки (демо-финал с анимацией загрузки на сервер)
+              // Кнопка отправки (градиент замирает при нажатии и переходит к финальному экрану)
+        submitBtn.addEventListener("click", () => {
+          if (submitBtn.classList.contains("is-loading")) return;
+          submitBtn.classList.add("is-loading");
+
+
+          setTimeout(() => {
+            closePromoBanner();
+            Swal.fire({
+              icon: "success",
+              title: "Uğurla",
+              text: "Əlavə qeydiyyat yaradıldı!",
+              confirmButtonColor: "#059639",
+              confirmButtonText: "OK"
+            });
+          }, 1200);
+        });
+
+        // Старт
+        renderSlide(0);
+        validateForm();
+
+        // Через 1.5 сек плавно раскрываем форму
+        setTimeout(() => {
+          root.classList.add("is-expanded");
+        }, 1500);
+  }
+
+  window.addEventListener("DOMContentLoaded", openPromoBanner);
+
+</script>
 </body>
 </html>
