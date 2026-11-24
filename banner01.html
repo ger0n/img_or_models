@@ -50,48 +50,52 @@
         inherits: false;
       }
 
-         .pm-overlay {
-      position: fixed;
-      inset: 0;
-      width: 100%;
-      height: 100vh;
-      height: 100dvh;
-      background: rgba(17, 24, 39, 0.58);
-      backdrop-filter: blur(3px);
-      -webkit-backdrop-filter: blur(3px);
-      z-index: 9999;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      padding: 14px 12px;
-      box-sizing: border-box;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-      opacity: 0;
-      transition: opacity 0.25s ease;
-    }
+      .pm-overlay {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100vh;
+        height: 100dvh;
+        background: rgba(17, 24, 39, 0.58);
+        backdrop-filter: blur(3px);
+        -webkit-backdrop-filter: blur(3px);
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 14px 12px;
+        box-sizing: border-box;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        opacity: 0;
+        transition: opacity 0.25s ease;
+      }
 
-    .pm-overlay.is-visible {
-      opacity: 1;
-    }
+      .pm-overlay.is-visible {
+        opacity: 1;
+      }
 
-    .pm-root {
-      position: relative;
-      width: 100%;
-      max-width: 440px;
-      margin: auto 0;
-      background: #e7ebf0;
-      border-radius: 26px;
-      padding: 16px 16px 28px;
-      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.35),
-                  inset 0 1px 1px rgba(255, 255, 255, 0.8);
-      font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
-      color: #1f2937;
-      box-sizing: border-box;
-      user-select: none;
-      flex-shrink: 0;
-    }
+      /* Плавное движение карточки  */
+      .pm-root {
+        position: relative;
+        width: 100%;
+        max-width: 440px;
+        margin: auto 0;
+        background: #e7ebf0;
+        border-radius: 26px;
+        padding: 16px 16px 28px;
+        box-shadow: 0 24px 48px rgba(0, 0, 0, 0.35),
+          inset 0 1px 1px rgba(255, 255, 255, 0.8);
+        font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+        color: #1f2937;
+        box-sizing: border-box;
+        user-select: none;
+        flex-shrink: 0;
+      }
+
+
+
 
 
       .pm-close {
@@ -136,7 +140,7 @@
           padding: 8px;
         }
 
-        
+
 
         .pm-story-card {
           height: 160px;
@@ -146,14 +150,19 @@
 
 
       /* ================= ЭКРАН 1 И ШАПКА ================= */
+      /* ================= Плавный подъём содержимого шапки и мягкое раскрытие .pm-body ================= */
       .pm-hero-status {
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
+        text-align: center;
         padding: 28px 12px 24px;
-        transition: all 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+        transition: all 0.85s cubic-bezier(0.16, 1, 0.3, 1);
       }
+
+
+
 
       .pm-circle {
         width: 84px;
@@ -245,23 +254,26 @@
       }
 
       /* ================= КОНТЕЙНЕР БАННЕРА ================= */
+      /* ================= тобы тело баннера выезжало вниз мягко после подъёма ================= */
       .pm-body {
         max-height: 0;
         opacity: 0;
         overflow: hidden;
         transform: translateY(12px);
-        transition: max-height 0.6s cubic-bezier(0.22, 1, 0.36, 1),
-          opacity 0.45s ease 0.1s,
-          transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+        transition: max-height 1s cubic-bezier(0.22, 1, 0.36, 1),
+          opacity 0.8s ease 0.15s,
+          transform 0.85s cubic-bezier(0.22, 1, 0.36, 1);
       }
+
 
       .pm-root.is-expanded .pm-body {
         max-height: 1400px;
         opacity: 1;
         transform: translateY(0);
-        padding: 0 10px 18px;
-        margin: 0 -10px;
+        padding-bottom: 18px;
       }
+
+
 
 
       .pm-badge-wrap {
@@ -1296,10 +1308,18 @@
       renderSlide(0);
       validateForm();
 
-      // Через 1.5 сек плавно раскрываем форму
+      // Через 1.5 сек плавно приподнимаем Экран 1 вверх (как закрытие Swal.fire),
+      // а через 340 мс трансформируем в раскрытую карточку баннера
       setTimeout(() => {
-        root.classList.add("is-expanded");
+        root.classList.add("is-lifting");
+        setTimeout(() => {
+          root.classList.add("is-expanded");
+          requestAnimationFrame(() => {
+            root.classList.remove("is-lifting");
+          });
+        }, 110);
       }, 1500);
+
     }
 
     window.addEventListener("DOMContentLoaded", openPromoBanner);
