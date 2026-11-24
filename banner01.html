@@ -50,47 +50,49 @@
         inherits: false;
       }
 
-      .pm-overlay {
-        position: fixed;
-        inset: 0;
-        width: 100%;
-        height: 100vh;
-        height: 100dvh;
-     /*   background: #e7ebf0;*/
-     background: rgba(17, 24, 39, 0.58);
-     backdrop-filter: blur(3px);
-        z-index: 9999;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 12px;
-        box-sizing: border-box;
-        overflow-y: auto;
-        opacity: 0;
-        transition: opacity 0.25s ease;
-      }
+         .pm-overlay {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100vh;
+      height: 100dvh;
+      background: rgba(17, 24, 39, 0.58);
+      backdrop-filter: blur(3px);
+      -webkit-backdrop-filter: blur(3px);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 14px 12px;
+      box-sizing: border-box;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
 
-      .pm-overlay.is-visible {
-        opacity: 1;
-      }
+    .pm-overlay.is-visible {
+      opacity: 1;
+    }
 
-      .pm-root {
-        position: relative;
-        width: 100%;
-        max-width: 440px;
-        max-height: calc(100dvh - 24px);
-        overflow-y: auto;
-        background: #e7ebf0;
-        border-radius: 26px;
-        padding: 16px 16px 28px;
-        box-shadow: 0 24px 48px rgba(0, 0, 0, 0.35),
+    .pm-root {
+      position: relative;
+      width: 100%;
+      max-width: 440px;
+      margin: auto 0;
+      background: #e7ebf0;
+      border-radius: 26px;
+      padding: 16px 16px 28px;
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.35),
                   inset 0 1px 1px rgba(255, 255, 255, 0.8);
+      font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+      color: #1f2937;
+      box-sizing: border-box;
+      user-select: none;
+      flex-shrink: 0;
+    }
 
-        font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
-        color: #1f2937;
-        box-sizing: border-box;
-        user-select: none;
-      }
 
       .pm-close {
         position: absolute;
@@ -134,10 +136,7 @@
           padding: 8px;
         }
 
-        .pm-root {
-          max-height: calc(100dvh - 16px);
-          padding: 12px 12px 14px;
-        }
+        
 
         .pm-story-card {
           height: 160px;
