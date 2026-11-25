@@ -839,12 +839,12 @@
         id: "promo_2",
         type: "Событие",
         badge: "",
-        title: "29 Noyabr Cərrah-ortoped qəbulu",
-        description: "Dəvət olunmuş mütəxəssisin öncədən qeydiyyatla müayinəsi.",
+        title: "29 Noyabr: Cərrah-stomatoloqun qəbulu",
+        description: "klinikamızda stomatoloq qəbul keçirəcək. CƏMİ 1 GÜN! Fürsəti qaçırmayın!",
         serviceName: "Cərrah-ortoped qəbulu",
         fixedDate: "29-11-2026",
         durationSec: 5,
-        mediaUrl: "https://raw.githubusercontent.com/ger0n/img_or_models/refs/heads/main/f1.jpg",
+        mediaUrl: "https://raw.githubusercontent.com/ger0n/img_or_models/refs/heads/main/f01.webp",
         mediaType: "image"
 
       },
@@ -852,12 +852,12 @@
         id: "promo_3",
         type: "Событие",
         badge: "",
-        title: "20 Dekabr Aparıcı cərrahın qəbulu",
-        description: "Klinikamızda cərrah konsultasiyasına yazılın.",
+        title: "20 Dekabr: Aparıcı ortodontun qəbulu",
+        description: "Yalnız 1 gün: Ödənişsiz müayinə və fərdi müalicə planı.",
         serviceName: "Cərrah qəbulu",
         fixedDate: "2026-12-20",
         durationSec: 5,
-        mediaUrl: "https://raw.githubusercontent.com/ger0n/img_or_models/refs/heads/main/f2.jpeg",
+        mediaUrl: "https://raw.githubusercontent.com/ger0n/img_or_models/refs/heads/main/f02.webp",
         mediaType: "image"
       },
 
@@ -865,16 +865,16 @@
 
         id: "promo_4",
         type: "Акция",
-        badge: "−30%",
-        title: "30% endirimlə peşəkar diş təmizliyi",
-        description: "Xüsusi qiymətlə kompleks ağız boşluğu gigiyenası.",
+        badge: "−10%",
+        title: "MƏHDUD GÜNLƏR! Cərrah-ortoped qəbulu",
+        description: "ödənişsiz konsultasiya və müalicəyə xüsusi endirim. Fürsəti qaçırmayın!",
         serviceName: "Peşəkar təmizlik (Aksiya −30%)",
         startDate: "2026-10-30",
         endDate: "2026-11-30",
         fixedDate: "",
         durationSec: 5,
-        mediaUrl: "https://ger0n.github.io/img_or_models/Comp 6.mp4",
-        posterUrl: "https://raw.githubusercontent.com/ger0n/img_or_models/refs/heads/main/poster_blood02.png",
+        mediaUrl: "https://ger0n.github.io/img_or_models/Doc.mp4",
+        posterUrl: "https://raw.githubusercontent.com/ger0n/img_or_models/refs/heads/main/Doc.webp",
         mediaType: "video"
 
 
@@ -884,7 +884,7 @@
     // TEST_WATERMARK (удалить при подключении таблицы):
     // Слайд 1: некликабельный текст по умолчанию ("AlfaMed Plus", без ссылки)
     // Слайд 2: кликабельный текст со ссылкой
-    mockPromotions[1].watermarkText = "AlfaMed Info";
+    mockPromotions[1].watermarkText = "AMO Lab";
     mockPromotions[1].watermarkUrl = "https://google.com";
     mockPromotions[1].watermarkOpacity = 0.8;
 
@@ -975,7 +975,7 @@
       function renderSlide(idx) {
         currentIndex = idx;
         const item = mockPromotions[idx];
-        const defaultClinicName = "AlfaMed Plus"; // по умолчанию название клиники (позже подтянем из настроек)
+        const defaultClinicName = "AMO Lab"; // по умолчанию название клиники (позже подтянем из настроек)
         const watermarkSlot = overlay.querySelector("#pm-watermark-slot");
 
 
