@@ -134,18 +134,13 @@
         display: flex;
       }
 
-      @media (max-height: 680px) {
+          @media (max-height: 680px) {
         .pm-overlay {
           align-items: flex-start;
           padding: 8px;
         }
-
-
-
-        .pm-story-card {
-          height: 160px;
-        }
       }
+
 
 
 
@@ -353,7 +348,9 @@
       }
 
 
-      /* Водяной знак (текст или логотип) в левом нижнем углу слайда */
+            /* Водяной знак (текст или логотип) в левом нижнем углу слайда */
+           /* Водяной знак (текст или логотип) в левом нижнем углу слайда */
+          /* Водяной знак (текст или логотип) в левом нижнем углу слайда */
       .pm-watermark {
         position: absolute;
         left: 10px;
@@ -362,6 +359,7 @@
         display: inline-flex;
         align-items: center;
         gap: 6px;
+        width: auto;
         background: rgba(15, 23, 42, 0.48);
         backdrop-filter: blur(4px);
         -webkit-backdrop-filter: blur(4px);
@@ -387,14 +385,15 @@
         -webkit-backdrop-filter: none;
         padding: 0;
         border-radius: 0;
+        max-width: none;
       }
 
       .pm-watermark-logo {
         display: block;
-        max-width: var(--wm-logo-w, 90px);
-        max-height: var(--wm-logo-h, 28px);
         width: auto;
         height: auto;
+        max-width: var(--wm-logo-w, 90px);
+        max-height: var(--wm-logo-h, 28px);
         object-fit: contain;
       }
 
@@ -418,6 +417,33 @@
         background: transparent;
         opacity: 1;
       }
+
+      /* Адаптация водяного знака под все мобильные экраны (до 480px) */
+            /* Адаптация водяного знака под все мобильные экраны (до 480px) */
+      @media (max-width: 480px) {
+        .pm-watermark {
+          left: 7px !important;
+          right: auto !important;
+          bottom: 7px !important;
+          width: auto !important;
+          font-size: 9px !important;
+          padding: 2px 6px !important;
+          border-radius: 8px !important;
+          max-width: 55% !important;
+        }
+
+        .pm-watermark.has-logo {
+          padding: 0 !important;
+          max-width: none !important;
+        }
+
+        .pm-watermark-logo {
+          max-width: calc(var(--wm-logo-w, 90px) * 0.58) !important;
+          max-height: calc(var(--wm-logo-h, 28px) * 0.58) !important;
+        }
+      }
+
+
 
 
 
@@ -709,12 +735,108 @@
         }
       }
 
-      @keyframes pmDraw {
+            @keyframes pmDraw {
         to {
           stroke-dashoffset: 0;
         }
       }
+
+      /* ================= АДАПТИВНОСТЬ ПОД УЗКИЕ ЭКРАНЫ (280px – 380px) ================= */
+      @media (max-width: 380px) {
+        .pm-overlay {
+          padding: 8px 6px;
+        }
+
+        .pm-root {
+          border-radius: 20px;
+          padding: 12px 11px 20px;
+        }
+
+        .pm-close {
+          top: 12px;
+          right: 11px;
+          width: 30px;
+          height: 30px;
+          font-size: 18px;
+        }
+
+        .pm-root.is-expanded .pm-hero-status {
+          width: calc(100% - 38px);
+          padding: 6px 10px;
+          gap: 7px;
+          margin-bottom: 10px;
+        }
+
+        .pm-root.is-expanded .pm-hero-sub {
+          font-size: 12px;
+          line-height: 1.25;
+        }
+
+        .pm-slide-title {
+          font-size: 15px;
+          line-height: 20px;
+          height: auto;
+          max-height: 40px;
+          white-space: normal;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          line-clamp: 2;
+          -webkit-box-orient: vertical;
+        }
+
+        .pm-slide-desc {
+          font-size: 12.5px;
+          line-height: 18px;
+          height: auto;
+          max-height: 36px;
+        }
+
+        .pm-watermark {
+          left: 8px;
+          bottom: 8px;
+          font-size: 10px;
+          padding: 3px 7px;
+          max-width: 72%;
+        }
+
+        .pm-watermark-logo {
+          max-width: min(var(--wm-logo-w, 76px), 76px);
+          max-height: min(var(--wm-logo-h, 22px), 22px);
+        }
+
+        .pm-static-slogan {
+          font-size: 12.5px;
+          padding: 7px 0;
+          margin: 8px 0;
+        }
+
+        .pm-datetime-title {
+          font-size: 14.5px;
+        }
+
+        .pm-input {
+          height: 41px;
+          font-size: 13.5px;
+          padding: 0 30px 0 34px;
+        }
+
+        .pm-icon-left {
+          left: 11px;
+        }
+
+        .pm-chevron {
+          right: 10px;
+        }
+
+        .pm-submit-btn {
+          width: 100%;
+          height: 42px;
+          margin-top: 22px;
+          font-size: 13.5px;
+        }
+      }
     </style>
+
 
 
 
