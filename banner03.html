@@ -134,7 +134,7 @@
         display: flex;
       }
 
-          @media (max-height: 680px) {
+      @media (max-height: 680px) {
         .pm-overlay {
           align-items: flex-start;
           padding: 8px;
@@ -299,7 +299,7 @@
 
       /* КАРТОЧКА СЛАЙДЕРА (убрано contain: strict для работы в Opera) */
       /* КАРТОЧКА СЛАЙДЕРА (убрано contain: strict для работы в Opera) */
-             .pm-story-card {
+      .pm-story-card {
         position: relative;
         width: 100%;
         aspect-ratio: 2 / 1;
@@ -348,9 +348,9 @@
       }
 
 
-            /* Водяной знак (текст или логотип) в левом нижнем углу слайда */
-           /* Водяной знак (текст или логотип) в левом нижнем углу слайда */
-          /* Водяной знак (текст или логотип) в левом нижнем углу слайда */
+      /* Водяной знак (текст или логотип) в левом нижнем углу слайда */
+      /* Водяной знак (текст или логотип) в левом нижнем углу слайда */
+      /* Водяной знак (текст или логотип) в левом нижнем углу слайда */
       .pm-watermark {
         position: absolute;
         left: 10px;
@@ -419,7 +419,7 @@
       }
 
       /* Адаптация водяного знака под все мобильные экраны (до 480px) */
-            /* Адаптация водяного знака под все мобильные экраны (до 480px) */
+      /* Адаптация водяного знака под все мобильные экраны (до 480px) */
       @media (max-width: 480px) {
         .pm-watermark {
           left: 7px !important;
@@ -678,7 +678,7 @@
       }
 
       /* Анимация градиента запускается сразу после заполнения всех полей */
-            .pm-submit-btn.is-active {
+      .pm-submit-btn.is-active {
         background: linear-gradient(90deg, #059639 0%, #34d399 35%, #10b981 65%, #059639 100%);
         background-size: 200% 100%;
         background-position: 0% 0%;
@@ -735,7 +735,7 @@
         }
       }
 
-            @keyframes pmDraw {
+      @keyframes pmDraw {
         to {
           stroke-dashoffset: 0;
         }
@@ -954,8 +954,13 @@
 
 
   <script>
-    const mockPromotions = [
 
+      
+    /* pm-static-slogan: если поле у админа пустое — подставляется стандартный перевод */
+    // window.PM_CONFIG = { staticSlogan: "Ваш тестовый текст" };
+
+
+    const mockPromotions = [
 
       {
         id: "promo_2",
@@ -996,15 +1001,15 @@
         fixedDate: "",
         durationSec: 5,
         mediaUrl: "https://ger0n.github.io/img_or_models/doc01.webp",
-        
+
         mediaType: "image"
-
-
       }
+
+
     ];
 
     // TEST_WATERMARK (удалить при подключении таблицы):
-    
+
     // Слайд 2: кликабельный текст со ссылкой
     mockPromotions[1].watermarkText = "AMO Lab";
     mockPromotions[1].watermarkUrl = "https://script.google.com/macros/s/AKfycbx89mzX4BPtZSC3yrQXu1mBBep85QOPLegjPJbyoGyICYP5fqD-g_56qGF1wHoiCR3_lw/exec";
@@ -1055,7 +1060,14 @@
 
       overlay.querySelector("#pm-hero-title").textContent = "Uğurlu!";
       overlay.querySelector("#pm-hero-sub").textContent = "Qeydiyyat uğurla yaradıldı!";
-      overlay.querySelector("#pm-static-slogan").textContent = "Xüsusi təklifimizdən yararlanın";
+      const sloganEl = overlay.querySelector("#pm-static-slogan");
+      if (sloganEl) {
+        const customSlogan = String((window.PM_CONFIG && window.PM_CONFIG.staticSlogan) || "").trim();
+        const defaultSlogan = (window.PM_LABELS && window.PM_LABELS.staticSlogan) || "Xüsusi təklifimizdən yararlanın";
+        sloganEl.textContent = customSlogan || defaultSlogan;
+      }
+
+
       overlay.querySelector("#pm-lbl-offer").textContent = "Xüsusi təklif";
       overlay.querySelector("#pm-lbl-date").textContent = "Tarix";
       overlay.querySelector("#pm-lbl-time").textContent = "Vaxt";
@@ -1158,32 +1170,27 @@
 
         barFills.forEach((fill, i) => {
           fill.style.width = i < idx ? "100%" : "0%";
-        });
+        }); // Отрисовка watermark: логотип (watermarkLogo) или текст
+        // (watermarkText / название клиники) 
+        const wmText = (item.watermarkText || "").trim() || defaultClinicName; const
+          wmLogo = (item.watermarkLogo || "").trim(); const wmUrl = (item.watermarkUrl || "").trim(); const
+            wmWidth = item.watermarkWidth ? `${item.watermarkWidth}px` : "90px"; const wmHeight = item.watermarkHeight ?
+              `${item.watermarkHeight}px` : "28px"; const wmOpacity = item.watermarkOpacity !== undefined && item.watermarkOpacity
+                !== "" ? Number(item.watermarkOpacity) : 0.72; if (watermarkSlot) {
+                  const wmStyle = `--wm-opacity:${wmOpacity};
+    --wm-logo-w:${wmWidth}; --wm-logo-h:${wmHeight};`; const innerContent = wmLogo ? `<img src="${wmLogo}" alt="${wmText}"
+    class="pm-watermark-logo">`
+                    : `${wmText}${wmUrl ? " ↗" : ""}`;
 
-        // Отрисовка watermark: логотип (watermarkLogo) или текст (watermarkText / название клиники)
-        const wmText = (item.watermarkText || "").trim() || defaultClinicName;
-        const wmLogo = (item.watermarkLogo || "").trim();
-        const wmUrl = (item.watermarkUrl || "").trim();
-        const wmWidth = item.watermarkWidth ? `${item.watermarkWidth}px` : "90px";
-        const wmHeight = item.watermarkHeight ? `${item.watermarkHeight}px` : "28px";
-        const wmOpacity = item.watermarkOpacity !== undefined && item.watermarkOpacity !== ""
-          ? Number(item.watermarkOpacity)
-          : 0.72;
+                  const extraClass = wmLogo ? "pm-watermark has-logo" : "pm-watermark";
 
-        if (watermarkSlot) {
-          const wmStyle = `--wm-opacity:${wmOpacity}; --wm-logo-w:${wmWidth}; --wm-logo-h:${wmHeight};`;
-          const innerContent = wmLogo
-            ? `<img src="${wmLogo}" alt="${wmText}" class="pm-watermark-logo">`
-            : `${wmText}${wmUrl ? " ↗" : ""}`;
-
-          const extraClass = wmLogo ? "pm-watermark has-logo" : "pm-watermark";
-
-          if (wmUrl) {
-            watermarkSlot.innerHTML = `<a href="${wmUrl}" target="_blank" rel="noopener noreferrer" class="${extraClass}" style="${wmStyle}">${innerContent}</a>`;
-          } else {
-            watermarkSlot.innerHTML = `<span class="${extraClass}" style="${wmStyle}">${innerContent}</span>`;
-          }
-        }
+                  if (wmUrl) {
+                    watermarkSlot.innerHTML = `<a href="${wmUrl}" target="_blank" rel="noopener noreferrer" class="${extraClass}"
+      style="${wmStyle}">${innerContent}</a>`;
+                  } else {
+                    watermarkSlot.innerHTML = `<span class="${extraClass}" style="${wmStyle}">${innerContent}</span>`;
+                  }
+                }
 
 
         elapsedBeforePause = 0;
@@ -1234,144 +1241,82 @@
 
         if (Math.abs(diffX) > 35) {
           // Свайп влево/вправо листает слайды
-          const nextIdx = diffX < 0
-            ? (currentIndex + 1) % mockPromotions.length
-            : (currentIndex - 1 + mockPromotions.length) % mockPromotions.length;
-          renderSlide(nextIdx);
-          if (offerSelect.value !== "") {
-            isPaused = true;
-            barFills[nextIdx].style.width = "100%";
-            offerSelect.value = mockPromotions[nextIdx].id;
-            offerSelect.dispatchEvent(new Event("change"));
-          } else {
-            isPaused = false;
-            startTime = performance.now();
-          }
-        } else if (Math.abs(diffX) < 8) {
-          // Клик по слайду: застываем ИМЕННО на текущем слайде и выбираем его в списке
-          const cur = mockPromotions[currentIndex];
-          isPaused = true;
-          barFills[currentIndex].style.width = "100%";
-          if (cur && cur.id) {
+          const nextIdx = diffX < 0 ? (currentIndex + 1) % mockPromotions.length : (currentIndex - 1 + mockPromotions.length)
+            % mockPromotions.length; renderSlide(nextIdx); if (offerSelect.value !== "") {
+              isPaused = true;
+              barFills[nextIdx].style.width = "100%"; offerSelect.value = mockPromotions[nextIdx].id; offerSelect.dispatchEvent(new
+                Event("change"));
+            } else { isPaused = false; startTime = performance.now(); }
+        } else if (Math.abs(diffX) < 8) { 
+          //Клик по слайду: застываем ИМЕННО на текущем слайде и выбираем его в списке 
+      const cur = mockPromotions[currentIndex];
+          isPaused = true; barFills[currentIndex].style.width = "100%"; if (cur && cur.id) {
             offerSelect.value = cur.id;
             offerSelect.dispatchEvent(new Event("change"));
           }
-        } else {
-          isPaused = false;
-          startTime = performance.now();
-        }
-      });
+        } else { isPaused = false; startTime = performance.now(); }
+      }); 
+      //Умная логика дат, автоподстановки времени и пошаговой эстафеты гида let fpInstance = null; let
+        isDateConfirmed = false; let isTimeConfirmed = false; function formatLocalYMD(dateObj) {
+          const
+          y = dateObj.getFullYear(); const m = String(dateObj.getMonth() + 1).padStart(2, "0"); const
+            d = String(dateObj.getDate()).padStart(2, "0"); return `${y}-${m}-${d}`;
+        } function updateDateAndSlots(opt) {
+          if
+            (fpInstance) { fpInstance.destroy(); fpInstance = null; } if (!opt) {
+              isDateConfirmed = false; isTimeConfirmed = false;
+              dateInput.readOnly = true; dateInput.style.backgroundColor = ""; dateInput.value = ""; timeSelect.value = "";
+              validateForm(); return;
+            } const startStr = opt.dataset.startDate; const endStr = opt.dataset.endDate; const
+              todayStr = formatLocalYMD(new Date()); const normalizeYMD = (s) => {
+                if (!s) return "";
+                const m = s.trim().match(/^(\d{2})-(\d{2})-(\d{4})$/);
+                return m ? `${m[3]}-${m[2]}-${m[1]}` : s.trim();
+              };
 
+          const normStart = normalizeYMD(startStr);
+          const normEnd = normalizeYMD(endStr);
+          const isSingleDay = Boolean(normStart && normEnd && normStart === normEnd);
 
-           // Умная логика дат, автоподстановки времени и пошаговой эстафеты гида
-      let fpInstance = null;
-      let isDateConfirmed = false;
-      let isTimeConfirmed = false;
+          const minDateStr = isSingleDay
+            ? normStart
+            : (normStart && normStart > todayStr ? normStart : todayStr);
+          const maxDateStr = normEnd || null;
+          const defaultDateStr = (maxDateStr && minDateStr > maxDateStr) ? maxDateStr : minDateStr;
 
-      function formatLocalYMD(dateObj) {
-        const y = dateObj.getFullYear();
-        const m = String(dateObj.getMonth() + 1).padStart(2, "0");
-        const d = String(dateObj.getDate()).padStart(2, "0");
-        return `${y}-${m}-${d}`;
-      }
-
-      function updateDateAndSlots(opt) {
-        if (fpInstance) {
-          fpInstance.destroy();
-          fpInstance = null;
-        }
-
-        if (!opt) {
-          isDateConfirmed = false;
-          isTimeConfirmed = false;
-          dateInput.readOnly = true;
-          dateInput.style.backgroundColor = "";
-          dateInput.value = "";
-          timeSelect.value = "";
-          validateForm();
-          return;
-        }
-
-        const startStr = opt.dataset.startDate;
-        const endStr = opt.dataset.endDate;
-        const todayStr = formatLocalYMD(new Date());
-
-        const normalizeYMD = (s) => {
-          if (!s) return "";
-          const m = s.trim().match(/^(\d{2})-(\d{2})-(\d{4})$/);
-          return m ? `${m[3]}-${m[2]}-${m[1]}` : s.trim();
-        };
-
-        const normStart = normalizeYMD(startStr);
-        const normEnd = normalizeYMD(endStr);
-        const isSingleDay = Boolean(normStart && normEnd && normStart === normEnd);
-
-        const minDateStr = isSingleDay
-          ? normStart
-          : (normStart && normStart > todayStr ? normStart : todayStr);
-        const maxDateStr = normEnd || null;
-        const defaultDateStr = (maxDateStr && minDateStr > maxDateStr) ? maxDateStr : minDateStr;
-
-        // Автовыбор первого доступного слота времени для записи в 1 клик
-        const availableSlotsCount = Math.max(0, timeSelect.options.length - 1);
-        if (availableSlotsCount > 0) {
-          timeSelect.selectedIndex = 1;
-        }
-
-        // Если 1 день и 1 слот — оба шага подтверждены автоматически
-        isDateConfirmed = isSingleDay;
-        isTimeConfirmed = isSingleDay && availableSlotsCount <= 1;
-
-        dateInput.readOnly = false;
-        dateInput.style.backgroundColor = "";
-        dateInput.value = defaultDateStr;
-
-        fpInstance = flatpickr(dateInput, {
-          dateFormat: "Y-m-d",
-          altInput: true,
-          altFormat: "d-m-Y",
-          altInputClass: "pm-input",
-          defaultDate: defaultDateStr,
-          minDate: minDateStr,
-          maxDate: maxDateStr,
-          disableMobile: true,
-          onDayCreate: (dObj, dStr, fp, dayElem) => {
-            const d = formatLocalYMD(dayElem.dateObj);
-            if (d >= minDateStr && (!maxDateStr || d <= maxDateStr)) {
-              dayElem.classList.add("pm-promo-active-day");
-            }
-          },
-          onOpen: () => {
-            isPaused = true;
-            isDateConfirmed = true;
-            if (timeSelect.options.length > 1 && !timeSelect.value) {
-              timeSelect.selectedIndex = 1;
-            }
-            if (timeSelect.options.length - 1 <= 1) {
-              isTimeConfirmed = true;
-            }
-            validateForm();
-          },
-          onChange: () => {
-            isPaused = true;
-            isDateConfirmed = true;
-            if (timeSelect.options.length > 1 && !timeSelect.value) {
-              timeSelect.selectedIndex = 1;
-            }
-            if (timeSelect.options.length - 1 <= 1) {
-              isTimeConfirmed = true;
-            }
-            validateForm();
+          // Автовыбор первого доступного слота времени для записи в 1 клик
+          const availableSlotsCount = Math.max(0, timeSelect.options.length - 1);
+          if (availableSlotsCount > 0) {
+            timeSelect.selectedIndex = 1;
           }
-        });
 
-        validateForm();
-      }
-
-
-
-
-
+          // Если 1 день и 1 слот — оба шага подтверждены автоматически
+          isDateConfirmed = isSingleDay;
+          isTimeConfirmed = isSingleDay && availableSlotsCount <= 1; dateInput.readOnly = false;
+          dateInput.style.backgroundColor = ""; dateInput.value = defaultDateStr; fpInstance = flatpickr(dateInput, {
+            dateFormat: "Y-m-d", altInput: true, altFormat: "d-m-Y", altInputClass: "pm-input", defaultDate:
+              defaultDateStr, minDate: minDateStr, maxDate: maxDateStr, disableMobile: true, onDayCreate: (dObj, dStr, fp,
+                dayElem) => {
+                const d = formatLocalYMD(dayElem.dateObj);
+                if (d >= minDateStr && (!maxDateStr || d <= maxDateStr)) { dayElem.classList.add("pm-promo-active-day"); }
+              },
+            onOpen: () => {
+              isPaused = true;
+              isDateConfirmed = true;
+              if (timeSelect.options.length > 1 && !timeSelect.value) {
+                timeSelect.selectedIndex = 1;
+              }
+              if (timeSelect.options.length - 1 <= 1) { isTimeConfirmed = true; } validateForm();
+            }, onChange: () => {
+              isPaused = true;
+              isDateConfirmed = true;
+              if (timeSelect.options.length > 1 && !timeSelect.value) {
+                timeSelect.selectedIndex = 1;
+              }
+              if (timeSelect.options.length - 1 <= 1) { isTimeConfirmed = true; } validateForm();
+            }
+          }); validateForm();
+        }
       offerSelect.addEventListener("change", () => {
         if (offerSelect.value === "") {
           isPaused = false;
@@ -1394,7 +1339,7 @@
         updateDateAndSlots(opt);
       });
 
-            // При ручном выборе даты из календаря — подтверждаем дату и переводим штрих на время
+      // При ручном выборе даты из календаря — подтверждаем дату и переводим штрих на время
       dateInput.addEventListener("change", () => {
         isPaused = true;
         if (dateInput.value) {
@@ -1402,21 +1347,17 @@
           if (timeSelect.options.length > 1 && !timeSelect.value) {
             timeSelect.selectedIndex = 1;
           }
-          if (timeSelect.options.length - 1 <= 1) {
+          if (timeSelect.options.length - 1 <= 1) { isTimeConfirmed = true; }
+        } validateForm();
+      }); const
+        confirmTimeStep = () => {
+          if (offerSelect.value !== "" && timeSelect.value !== "") {
+            isPaused = true;
+            isDateConfirmed = true;
             isTimeConfirmed = true;
+            validateForm();
           }
-        }
-        validateForm();
-      });
-
-      const confirmTimeStep = () => {
-        if (offerSelect.value !== "" && timeSelect.value !== "") {
-          isPaused = true;
-          isDateConfirmed = true;
-          isTimeConfirmed = true;
-          validateForm();
-        }
-      };
+        };
 
       timeSelect.addEventListener("pointerdown", confirmTimeStep);
       timeSelect.addEventListener("change", confirmTimeStep);
